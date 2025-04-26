@@ -1,73 +1,127 @@
-# Welcome to your Lovable project
 
-## Project info
+# Homeboy Barbing Saloon Website
 
-**URL**: https://lovable.dev/projects/a72a4efc-97e2-472e-8d6d-1720095d04e4
+A modern website for Homeboy Barbing Saloon with a booking system that integrates with Notion.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Responsive design
+- Service/pricing display
+- Online booking form
+- Notion integration via Supabase Edge Functions
 
-**Use Lovable**
+## Setup Instructions
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a72a4efc-97e2-472e-8d6d-1720095d04e4) and start prompting.
+### 1. Set up Notion Integration
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Create a new integration at https://www.notion.so/my-integrations
+   - Give it a name (e.g., "Homeboy Booking System")
+   - Select the workspace where you want to use the integration
+   - Get the `Internal Integration Token`
 
-**Use your preferred IDE**
+2. Create a new database in Notion with the following properties:
+   - Name (Title)
+   - Email (Email)
+   - Phone (Phone Number)
+   - Service (Text)
+   - Date (Date, with time enabled)
+   - Notes (Text)
+   - Status (Select, with options like "Pending", "Confirmed", "Completed", "Cancelled")
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. Share your database with the integration you created:
+   - Open the database
+   - Click "Share" in the top right
+   - Add the integration by name
+   - Copy the database ID from the URL (it's the part after the workspace name and before the question mark)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 2. Set up Supabase
 
-Follow these steps:
+1. Create a new table in Supabase called `bookings` with the following columns:
+   - id (uuid, primary key)
+   - created_at (timestamp with time zone, default: now())
+   - name (text)
+   - email (text)
+   - phone (text)
+   - service (text)
+   - appointment_date (date)
+   - appointment_time (text)
+   - notes (text)
+   - status (text, default: 'pending')
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Add your Notion API key as a secret in Supabase:
+   - Go to the Supabase dashboard
+   - Navigate to Project Settings > API
+   - Under "Project Secrets", add:
+     - `NOTION_API_KEY`: Your Notion integration token
+     - `NOTION_DATABASE_ID`: Your Notion database ID
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Deploy the Edge Function:
+   - Install Supabase CLI if you haven't already
+   - Run `supabase functions deploy create-notion-booking`
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 3. Connect the Frontend to the Edge Function
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+Update the `handleBookingSubmit` function in your `Index.tsx` file to call the Edge Function:
+
+```typescript
+const handleBookingSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  // Get form data
+  const form = e.target as HTMLFormElement;
+  const formData = new FormData(form);
+  
+  // Create booking data object
+  const bookingData = {
+    name: formData.get('name'),
+    email: formData.get('email'),
+    phone: formData.get('phone'),
+    service: formData.get('service'),
+    date: formData.get('date'),
+    time: formData.get('time'),
+    notes: formData.get('notes'),
+  };
+
+  try {
+    // Call the Supabase Edge Function
+    const response = await fetch('https://[YOUR_PROJECT_REF].supabase.co/functions/v1/create-notion-booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(bookingData),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to book appointment');
+    }
+    
+    // Show success message using toast
+    toast({
+      title: "Success!",
+      description: "Your appointment has been booked. We'll contact you to confirm shortly.",
+    });
+    
+    // Reset form
+    form.reset();
+    
+  } catch (error) {
+    console.error('Error booking appointment:', error);
+    
+    // Show error message using toast
+    toast({
+      title: "Booking Failed",
+      description: "There was an error booking your appointment. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
 ```
 
-**Edit a file directly in GitHub**
+Replace `[YOUR_PROJECT_REF]` with your actual Supabase project reference.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Deployment
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/a72a4efc-97e2-472e-8d6d-1720095d04e4) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Deploy your frontend using Lovable's publishing feature
+2. Make sure your Supabase Edge Function is deployed
+3. Test the booking form to ensure it's correctly creating entries in both Supabase and Notion
