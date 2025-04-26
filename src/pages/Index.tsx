@@ -236,12 +236,12 @@ const services = [{
   id: 1,
   name: "Classic Haircut",
   description: "A traditional haircut with clippers and scissors, includes styling.",
-  price: 25
+  price: 300
 }, {
   id: 2,
   name: "Premium Package",
   description: "Haircut, beard trim, and premium styling with quality products.",
-  price: 45
+  price: 1000
 }];
 
 // Sample time slots

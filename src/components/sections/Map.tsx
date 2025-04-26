@@ -1,47 +1,19 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React from 'react';
 
 const Map = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-
-  useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
-
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [-16.675833, 13.438333], // Serrekunda coordinates
-      zoom: 15
-    });
-
-    const marker = new mapboxgl.Marker()
-      .setLngLat([-16.675833, 13.438333])
-      .addTo(map.current);
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [mapboxToken]);
-
   return (
     <div className="relative w-full h-[400px] rounded-lg overflow-hidden">
-      {!mapboxToken && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center p-4">
-          <input
-            type="text"
-            placeholder="Enter your Mapbox public token"
-            className="w-full max-w-md px-4 py-2 border rounded"
-            onChange={(e) => setMapboxToken(e.target.value)}
-          />
-        </div>
-      )}
-      <div ref={mapContainer} className="w-full h-full" />
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.5554245733237!2d-16.675833!3d13.438333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xec29c3d46b3a8a7%3A0x7c8db7a8483a33e2!2sHomeboy%20Barbing%20Saloon!5e0!3m2!1sen!2s!4v1708929439607!5m2!1sen!2s"
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        className="absolute inset-0"
+      ></iframe>
     </div>
   );
 };
