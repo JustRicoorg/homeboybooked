@@ -1,12 +1,9 @@
-
 import React from 'react';
-
 const AboutUs = () => {
-  return (
-    <section id="about" className="py-20 bg-white">
+  return <section id="about" className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold mb-2 text-center">About Us</h2>
-        <p className="text-gray-600 text-center mb-12">Excellence in grooming since 2010</p>
+        <p className="text-gray-600 text-center mb-12">Excellence in grooming since 2015</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
@@ -28,8 +25,6 @@ const AboutUs = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default AboutUs;
