@@ -2,40 +2,44 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Calendar, Check, User } from "lucide-react";
 import { useState } from "react";
+import AboutUs from "@/components/sections/AboutUs";
+import Gallery from "@/components/sections/Gallery";
+import Contact from "@/components/sections/Contact";
+
 const Index = () => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  return <div className="min-h-screen flex flex-col">
+
+  return (
+    <div className="min-h-screen flex flex-col">
       {/* Navbar */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xl text-[#1A1F2C]">HOMEBOY</span>
-            <span className="text-sm text-[#8E9196]">Barbing Saloon</span>
+            <span className="font-bold text-xl text-gray-900">HOMEBOY</span>
+            <span className="text-sm text-gray-600">Barbing Saloon</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#home" className="text-[#1A1F2C] hover:text-black">Home</a>
-            <a href="#services" className="text-[#1A1F2C] hover:text-black">Services</a>
-            <a href="#booking" className="text-[#1A1F2C] hover:text-black">Book Now</a>
+            <a href="#home" className="text-gray-900 hover:text-black">Home</a>
+            <a href="#about" className="text-gray-900 hover:text-black">About</a>
+            <a href="#services" className="text-gray-900 hover:text-black">Services</a>
+            <a href="#gallery" className="text-gray-900 hover:text-black">Gallery</a>
+            <a href="#contact" className="text-gray-900 hover:text-black">Contact</a>
           </nav>
           <Button onClick={() => {
-          setIsBookingOpen(true);
-          setTimeout(() => {
-            const bookingSection = document.getElementById('booking');
-            bookingSection?.scrollIntoView({
-              behavior: 'smooth'
-            });
-          }, 100);
-        }} className="bg-[#1A1F2C] text-white hover:bg-[#151a24]">
+            setIsBookingOpen(true);
+            setTimeout(() => {
+              const bookingSection = document.getElementById('booking');
+              bookingSection?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }} className="bg-gray-900 text-white hover:bg-gray-800">
             Book Appointment
           </Button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="bg-gradient-to-r from-[#1a1f2c] to-[#2c3345] text-white py-20">
+      <section id="home" className="bg-gray-900 text-white py-20">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-10 md:mb-0">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Professional Haircuts & Styling</h1>
@@ -73,44 +77,51 @@ const Index = () => {
         </div>
       </section>
 
+      {/* About Us Section */}
+      <AboutUs />
+
       {/* Services/Pricing Section */}
-      <section id="services" className="py-20 bg-[#F1F1F1]">
+      <section id="services" className="py-20 bg-gray-100">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-2 text-center">Our Services</h2>
-          <p className="text-[#8E9196] text-center mb-12">Quality haircuts and styling services</p>
+          <p className="text-gray-600 text-center mb-12">Quality haircuts and styling services</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {services.map(service => <div key={service.id} className="bg-white p-6 rounded-lg shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {services.slice(0, 2).map(service => (
+              <div key={service.id} className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <h3 className="text-xl font-bold mb-2">{service.name}</h3>
-                <p className="text-[#8E9196] mb-4">{service.description}</p>
+                <p className="text-gray-600 mb-4">{service.description}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold">${service.price}</span>
+                  <span className="text-2xl font-bold text-gray-900">${service.price}</span>
                   <Button onClick={() => {
-                setIsBookingOpen(true);
-                setTimeout(() => {
-                  const bookingSection = document.getElementById('booking');
-                  bookingSection?.scrollIntoView({
-                    behavior: 'smooth'
-                  });
-
-                  // Pre-select this service in the booking form
-                  const serviceInput = document.getElementById('service') as HTMLSelectElement;
-                  if (serviceInput) {
-                    serviceInput.value = service.name;
-                  }
-                  toast({
-                    title: "Service selected",
-                    description: `${service.name} has been selected for booking.`
-                  });
-                }, 100);
-              }} variant="outline" className="border-[#1A1F2C] text-[#1A1F2C] hover:bg-[#1A1F2C] hover:text-white">
+                    setIsBookingOpen(true);
+                    setTimeout(() => {
+                      const bookingSection = document.getElementById('booking');
+                      bookingSection?.scrollIntoView({ behavior: 'smooth' });
+                      const serviceInput = document.getElementById('service') as HTMLSelectElement;
+                      if (serviceInput) {
+                        serviceInput.value = service.name;
+                      }
+                      toast({
+                        title: "Service selected",
+                        description: `${service.name} has been selected for booking.`
+                      });
+                    }, 100);
+                  }} variant="outline" className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white">
                     Book Now
                   </Button>
                 </div>
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* Gallery Section */}
+      <Gallery />
+
+      {/* Contact Section */}
+      <Contact />
 
       {/* Booking Form Section */}
       <section id="booking" className="py-20 bg-white">
@@ -177,16 +188,16 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#1A1F2C] text-white py-12">
+      <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-bold mb-4">HOMEBOY</h3>
-              <p className="text-[#8E9196]">Professional Barbing Saloon providing quality haircuts and styling services.</p>
+              <p className="text-gray-600">Professional Barbing Saloon providing quality haircuts and styling services.</p>
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Contact Us</h3>
-              <address className="text-[#8E9196] not-italic">
+              <address className="text-gray-600 not-italic">
                 <p>123 Barber Street,</p>
                 <p>Cityville, State 12345</p>
                 <p className="mt-2">Phone: (123) 456-7890</p>
@@ -195,7 +206,7 @@ const Index = () => {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Opening Hours</h3>
-              <ul className="text-[#8E9196]">
+              <ul className="text-gray-600">
                 <li className="flex justify-between mb-1">
                   <span>Monday - Friday:</span>
                   <span>9am - 8pm</span>
@@ -211,15 +222,16 @@ const Index = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-[#8E9196]/20 mt-8 pt-8 text-center text-[#8E9196]">
+          <div className="border-t border-gray-600/20 mt-8 pt-8 text-center text-gray-600">
             <p>&copy; {new Date().getFullYear()} Homeboy Barbing Saloon. All rights reserved.</p>
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
 
-// Sample services data
+// Sample services data (reduced to 2)
 const services = [{
   id: 1,
   name: "Classic Haircut",
@@ -227,29 +239,9 @@ const services = [{
   price: 25
 }, {
   id: 2,
-  name: "Beard Trim",
-  description: "Shape and trim your beard to perfection.",
-  price: 15
-}, {
-  id: 3,
-  name: "Haircut & Beard Combo",
-  description: "Get both a haircut and beard trim at a special price.",
-  price: 35
-}, {
-  id: 4,
-  name: "Kids Haircut",
-  description: "Haircut for children under 12 years old.",
-  price: 20
-}, {
-  id: 5,
-  name: "Premium Styling",
-  description: "Haircut with premium styling and hair products.",
-  price: 40
-}, {
-  id: 6,
-  name: "Head Shave",
-  description: "Clean head shave with razor finish.",
-  price: 30
+  name: "Premium Package",
+  description: "Haircut, beard trim, and premium styling with quality products.",
+  price: 45
 }];
 
 // Sample time slots
@@ -326,4 +318,5 @@ const handleBookingSubmit = async (e: React.FormEvent) => {
     }, 5000);
   }
 };
+
 export default Index;
