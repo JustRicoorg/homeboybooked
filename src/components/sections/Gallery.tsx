@@ -5,17 +5,17 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import SocialLinks from './SocialLinks';
 
 const Gallery = () => {
-  // Using the images you provided, which should be available in the lovable-uploads folder
   const images = [
-    '/lovable-uploads/c4cefe4e-ad73-4201-a550-1602b9ac7b3a.png', 
-    '/lovable-uploads/a7d8c85b-08a2-4c0a-824d-332d75bb2876.png', 
-    '/lovable-uploads/15a88730-ce0a-44b4-a8a2-b4bf54406173.png', 
-    '/lovable-uploads/04bb4c83-fc58-4981-ad7d-a3f00db47c4b.png', 
-    '/lovable-uploads/b5edb523-4e3d-4f50-9231-55689eb0d56f.png', 
-    '/lovable-uploads/f48963f4-31c1-459c-b820-76e6e9646648.png'
+    '/lovable-uploads/824b3e0e-8ed0-4046-8e7d-efcad4bc51cd.png',
+    '/lovable-uploads/1a564743-278c-411e-b2a1-82bf86a70ec7.png',
+    '/lovable-uploads/2a0e716b-063b-4fb2-a96f-cc319f9ea0ce.png',
+    '/lovable-uploads/35a1de13-abca-4df9-bc7e-a02bb9b27f6c.png',
+    '/lovable-uploads/cc2dae37-b995-437d-bb5f-7ac93acb8898.png',
+    '/lovable-uploads/41648bb2-a34d-4396-a0ac-ccadcc5d6d62.png'
   ];
 
-  return <section id="gallery" className="py-20 bg-gray-100">
+  return (
+    <section id="gallery" className="py-20 bg-gray-100">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center gap-2 mb-2 fade-in">
           <GalleryHorizontal className="w-6 h-6" />
@@ -49,7 +49,8 @@ const Gallery = () => {
 
         <SocialLinks />
       </div>
-    </section>;
+    </section>
+  );
 };
 
 export default Gallery;
