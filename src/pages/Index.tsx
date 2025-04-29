@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Calendar, Check, User } from "lucide-react";
@@ -9,6 +10,7 @@ import Contact from "@/components/sections/Contact";
 const Index = () => {
   const { toast } = useToast();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -178,8 +180,12 @@ const Index = () => {
                   <label htmlFor="notes" className="block mb-2 font-medium">Additional Notes</label>
                   <textarea id="notes" className="w-full min-h-[100px] rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2" placeholder="Any specific requests or notes about your haircut..."></textarea>
                 </div>
-                <Button type="submit" className="w-full bg-[#1A1F2C] text-white hover:bg-[#151a24]">
-                  Book Appointment
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#1A1F2C] text-white hover:bg-[#151a24]"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Processing..." : "Book Appointment"}
                 </Button>
               </form>
             </div>
@@ -271,34 +277,33 @@ const handleBookingSubmit = async (e: React.FormEvent) => {
     time: timeInput.value,
     notes: notesInput.value
   };
+
   try {
-    // We'll need to create a Supabase Edge Function to handle the Notion integration
-    // For now, we'll just show a success message
+    // Call the Supabase Edge Function endpoint
+    const response = await fetch('https://qnasrupzjxawilizwelf.supabase.co/functions/v1/create-notion-booking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(bookingData),
+    });
 
-    // In the future, the actual API call would go here
-    // const response = await fetch('/api/book', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(bookingData),
-    // });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to book appointment');
+    }
 
-    // if (!response.ok) {
-    //   throw new Error('Failed to book appointment');
-    // }
+    const data = await response.json();
 
-    // const data = await response.json();
-
-    // Show success message
-    const toast = document.createElement('div');
-    toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded shadow-lg';
-    toast.textContent = 'Appointment booked successfully! We will confirm shortly.';
-    document.body.appendChild(toast);
+    // Show success toast using the useToast hook
+    const toastElement = document.createElement('div');
+    toastElement.className = 'fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded shadow-lg z-50';
+    toastElement.textContent = 'Appointment booked successfully! We will confirm shortly.';
+    document.body.appendChild(toastElement);
 
     // Remove toast after 5 seconds
     setTimeout(() => {
-      toast.remove();
+      toastElement.remove();
     }, 5000);
 
     // Reset form
@@ -306,15 +311,15 @@ const handleBookingSubmit = async (e: React.FormEvent) => {
   } catch (error) {
     console.error('Error booking appointment:', error);
 
-    // Show error message
-    const toast = document.createElement('div');
-    toast.className = 'fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded shadow-lg';
-    toast.textContent = 'Failed to book appointment. Please try again.';
-    document.body.appendChild(toast);
+    // Show error toast
+    const toastElement = document.createElement('div');
+    toastElement.className = 'fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded shadow-lg z-50';
+    toastElement.textContent = error instanceof Error ? error.message : 'Failed to book appointment. Please try again.';
+    document.body.appendChild(toastElement);
 
     // Remove toast after 5 seconds
     setTimeout(() => {
-      toast.remove();
+      toastElement.remove();
     }, 5000);
   }
 };

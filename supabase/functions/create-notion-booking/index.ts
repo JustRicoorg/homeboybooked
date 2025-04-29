@@ -7,8 +7,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.0.0'
 
 const NOTION_API_KEY = Deno.env.get('NOTION_API_KEY')
 const NOTION_DATABASE_ID = Deno.env.get('NOTION_DATABASE_ID')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
+const SUPABASE_URL = 'https://qnasrupzjxawilizwelf.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuYXNydXB6anhhd2lsaXp3ZWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2ODcxMjgsImV4cCI6MjA2MTI2MzEyOH0.kOZ0OHI-OBoo_PQ8o3KUU9T-z9YI42raUHZqnvXwAWY'
 
 interface BookingData {
   name: string
@@ -44,10 +44,10 @@ serve(async (req) => {
   }
 
   try {
-    // Create a Supabase client
+    // Create a Supabase client with your credentials
     const supabaseClient = createClient(
-      SUPABASE_URL!,
-      SUPABASE_ANON_KEY!
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
     )
 
     // Get booking data from request
@@ -67,94 +67,6 @@ serve(async (req) => {
       )
     }
 
-    // Check if Notion API key and database ID are set
-    if (!NOTION_API_KEY || !NOTION_DATABASE_ID) {
-      return new Response(
-        JSON.stringify({ error: 'Notion API configuration is missing' }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      )
-    }
-
-    // Create Notion page in database
-    const notionResponse = await fetch(`https://api.notion.com/v1/pages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${NOTION_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Notion-Version': '2022-06-28',
-      },
-      body: JSON.stringify({
-        parent: { database_id: NOTION_DATABASE_ID },
-        properties: {
-          Name: {
-            title: [
-              {
-                text: {
-                  content: booking.name,
-                },
-              },
-            ],
-          },
-          Email: {
-            email: booking.email,
-          },
-          Phone: {
-            phone_number: booking.phone,
-          },
-          Service: {
-            rich_text: [
-              {
-                text: {
-                  content: booking.service,
-                },
-              },
-            ],
-          },
-          Date: {
-            date: {
-              start: `${booking.date}T${booking.time.replace(/\s/g, '')}:00`,
-            },
-          },
-          Notes: {
-            rich_text: [
-              {
-                text: {
-                  content: booking.notes || 'No additional notes',
-                },
-              },
-            ],
-          },
-          Status: {
-            select: {
-              name: 'Pending',
-            },
-          },
-        },
-      }),
-    })
-
-    if (!notionResponse.ok) {
-      const errorData = await notionResponse.json()
-      console.error('Notion API error:', errorData)
-      
-      return new Response(
-        JSON.stringify({ error: 'Failed to create booking in Notion' }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      )
-    }
-
     // Save booking to Supabase
     const { data, error } = await supabaseClient
       .from('bookings')
@@ -166,13 +78,96 @@ serve(async (req) => {
           service: booking.service,
           appointment_date: booking.date,
           appointment_time: booking.time,
-          notes: booking.notes,
+          notes: booking.notes || '',
           status: 'pending',
         },
       ])
 
     if (error) {
       console.error('Supabase error:', error)
+      return new Response(
+        JSON.stringify({ error: 'Failed to save booking to database' }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      )
+    }
+
+    // Attempt to create Notion page if config exists
+    let notionResult = { success: false }
+    
+    if (NOTION_API_KEY && NOTION_DATABASE_ID) {
+      try {
+        // Create Notion page in database
+        const notionResponse = await fetch(`https://api.notion.com/v1/pages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${NOTION_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Notion-Version': '2022-06-28',
+          },
+          body: JSON.stringify({
+            parent: { database_id: NOTION_DATABASE_ID },
+            properties: {
+              Name: {
+                title: [
+                  {
+                    text: {
+                      content: booking.name,
+                    },
+                  },
+                ],
+              },
+              Email: {
+                email: booking.email,
+              },
+              Phone: {
+                phone_number: booking.phone,
+              },
+              Service: {
+                rich_text: [
+                  {
+                    text: {
+                      content: booking.service,
+                    },
+                  },
+                ],
+              },
+              Date: {
+                date: {
+                  start: `${booking.date}T${booking.time.replace(/\s/g, '')}:00`,
+                },
+              },
+              Notes: {
+                rich_text: [
+                  {
+                    text: {
+                      content: booking.notes || 'No additional notes',
+                    },
+                  },
+                ],
+              },
+              Status: {
+                select: {
+                  name: 'Pending',
+                },
+              },
+            },
+          }),
+        })
+
+        if (notionResponse.ok) {
+          notionResult.success = true
+        } else {
+          console.error('Notion API error:', await notionResponse.json())
+        }
+      } catch (notionErr) {
+        console.error('Notion integration error:', notionErr)
+      }
     }
 
     // Return success response
@@ -180,6 +175,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Booking created successfully',
+        notionSync: notionResult.success ? 'succeeded' : 'not configured or failed',
       }),
       {
         status: 200,
