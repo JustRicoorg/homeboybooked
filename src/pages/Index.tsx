@@ -6,7 +6,7 @@ import { useState } from "react";
 import AboutUs from "@/components/sections/AboutUs";
 import Gallery from "@/components/sections/Gallery";
 import Contact from "@/components/sections/Contact";
-import { addMonths, format, isBefore, isAfter, startOfToday } from "date-fns";
+import { addMonths, format, isBefore, isAfter, startOfToday, addDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -30,11 +30,28 @@ const Index = () => {
     const startHour = isToday ? currentDate.getHours() + 1 : 9; // If today, start from next hour
     const endHour = 19; // End at 7 PM
     
-    for (let hour = startHour; hour <= endHour; hour++) {
+    // Morning slots (9am-12pm)
+    for (let hour = Math.max(9, startHour); hour < 12; hour++) {
       const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
       const ampm = hour < 12 ? 'AM' : 'PM';
       timeSlots.push(`${formattedHour}:00 ${ampm}`);
-      if (hour < endHour) {
+      timeSlots.push(`${formattedHour}:30 ${ampm}`);
+    }
+    
+    // Afternoon slots (12pm-5pm)
+    for (let hour = Math.max(12, startHour); hour < 17; hour++) {
+      const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+      const ampm = 'PM';
+      timeSlots.push(`${formattedHour}:00 ${ampm}`);
+      timeSlots.push(`${formattedHour}:30 ${ampm}`);
+    }
+    
+    // Evening slots (5pm-7pm)
+    for (let hour = Math.max(17, startHour); hour < 20; hour++) {
+      const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+      const ampm = 'PM';
+      timeSlots.push(`${formattedHour}:00 ${ampm}`);
+      if (hour < 19) {
         timeSlots.push(`${formattedHour}:30 ${ampm}`);
       }
     }
@@ -120,9 +137,9 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/5a80ae40-a0f0-45fd-a24b-9f6f5ff56e5a.png" 
+              src="/lovable-uploads/1146c6dd-75d5-441d-94e3-2b25ee10bdd5.png" 
               alt="HOMEBOY Barbing Saloon Logo" 
-              className="h-12 w-auto"
+              className="h-20 w-auto"
             />
           </div>
           <nav className="hidden md:flex items-center gap-6">
@@ -156,7 +173,7 @@ const Index = () => {
               servicesSection?.scrollIntoView({
                 behavior: 'smooth'
               });
-            }} variant="outline" className="border-white hover:bg-white text-black">
+            }} variant="outline" className="border-white hover:bg-white text-white hover:text-black">
                 View Services
               </Button>
               <Button onClick={() => {
@@ -173,11 +190,11 @@ const Index = () => {
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <div className="w-full max-w-md aspect-square rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="w-full max-w-md overflow-hidden rounded-lg">
               <img 
-                src="/lovable-uploads/5a80ae40-a0f0-45fd-a24b-9f6f5ff56e5a.png"
-                alt="HOMEBOY Barbing Saloon Logo"
-                className="w-full h-full object-contain"
+                src="/lovable-uploads/aaa02fad-5340-437b-86f0-858f40155208.png"
+                alt="Barber shop interior"
+                className="w-full h-auto object-cover"
               />
             </div>
           </div>
@@ -336,7 +353,7 @@ const Index = () => {
             <div>
               <div className="flex items-center mb-4">
                 <img 
-                  src="/lovable-uploads/5a80ae40-a0f0-45fd-a24b-9f6f5ff56e5a.png" 
+                  src="/lovable-uploads/1146c6dd-75d5-441d-94e3-2b25ee10bdd5.png" 
                   alt="HOMEBOY Barbing Saloon Logo" 
                   className="h-16 w-auto mr-3"
                 />
@@ -345,7 +362,7 @@ const Index = () => {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Contact Us</h3>
-              <address className="text-gray-600 not-italic">
+              <address className="text-gray-400 not-italic">
                 <p>123 Barber Street,</p>
                 <p>Cityville, State 12345</p>
                 <p className="mt-2">Phone: (123) 456-7890</p>
@@ -354,7 +371,7 @@ const Index = () => {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Opening Hours</h3>
-              <ul className="text-gray-600">
+              <ul className="text-gray-400">
                 <li className="flex justify-between mb-1">
                   <span>Monday - Friday:</span>
                   <span>9am - 8pm</span>
@@ -370,7 +387,7 @@ const Index = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-600/20 mt-8 pt-8 text-center text-gray-600">
+          <div className="border-t border-gray-600/20 mt-8 pt-8 text-center text-gray-400">
             <p>&copy; {new Date().getFullYear()} Homeboy Barbing Saloon. All rights reserved.</p>
           </div>
         </div>
