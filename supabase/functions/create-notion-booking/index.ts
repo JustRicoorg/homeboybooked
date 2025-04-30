@@ -21,26 +21,23 @@ interface BookingData {
   notes: string
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   }
 
@@ -60,17 +57,16 @@ serve(async (req) => {
         JSON.stringify({ error: 'Missing required booking information' }),
         {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       )
     }
 
+    console.log('Processing booking:', JSON.stringify(booking))
+
     // Save booking to Supabase
     const { data, error } = await supabaseClient
-      .from('homeboy_booking_client')  // Updated table name
+      .from('homeboy_booking_client')
       .insert([
         {
           name: booking.name,
@@ -87,16 +83,15 @@ serve(async (req) => {
     if (error) {
       console.error('Supabase error:', error)
       return new Response(
-        JSON.stringify({ error: 'Failed to save booking to database' }),
+        JSON.stringify({ error: 'Failed to save booking to database', details: error }),
         {
           status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       )
     }
+
+    console.log('Booking saved to Supabase successfully')
 
     // Create Notion page in database
     let notionResult = { success: false }
@@ -104,6 +99,8 @@ serve(async (req) => {
     try {
       // Format date and time for Notion
       const appointmentDateTime = `${booking.date}T${booking.time.replace(/\s/g, '')}:00`
+      
+      console.log('Creating Notion page with appointment time:', appointmentDateTime)
       
       // Create Notion page
       const notionResponse = await fetch(`https://api.notion.com/v1/pages`, {
@@ -129,7 +126,13 @@ serve(async (req) => {
               email: booking.email,
             },
             Phone: {
-              phone_number: booking.phone,
+              rich_text: [
+                {
+                  text: {
+                    content: booking.phone,
+                  },
+                },
+              ],
             },
             Service: {
               rich_text: [
@@ -184,23 +187,17 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       }
     )
   } catch (err) {
     console.error('Error processing request:', err)
     
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: err.message }),
       {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       }
     )
   }

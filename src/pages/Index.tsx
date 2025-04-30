@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Calendar, Check, User } from "lucide-react";
@@ -256,6 +255,7 @@ const timeSlots = ["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11
 // Form submission handler
 const handleBookingSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+  setIsSubmitting(true);
 
   // Get form elements
   const form = e.target as HTMLFormElement;
@@ -279,6 +279,8 @@ const handleBookingSubmit = async (e: React.FormEvent) => {
   };
 
   try {
+    console.log('Submitting booking data:', bookingData);
+    
     // Call the Supabase Edge Function endpoint
     const response = await fetch('https://qnasrupzjxawilizwelf.supabase.co/functions/v1/create-notion-booking', {
       method: 'POST',
@@ -288,39 +290,34 @@ const handleBookingSubmit = async (e: React.FormEvent) => {
       body: JSON.stringify(bookingData),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to book appointment');
+      throw new Error(data.error || 'Failed to book appointment');
     }
 
-    const data = await response.json();
+    console.log('Booking response:', data);
 
-    // Show success toast using the useToast hook
-    const toastElement = document.createElement('div');
-    toastElement.className = 'fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded shadow-lg z-50';
-    toastElement.textContent = 'Appointment booked successfully! We will confirm shortly.';
-    document.body.appendChild(toastElement);
-
-    // Remove toast after 5 seconds
-    setTimeout(() => {
-      toastElement.remove();
-    }, 5000);
+    // Show success toast
+    toast({
+      title: "Appointment Booked!",
+      description: "Your appointment has been successfully booked. We will contact you shortly for confirmation.",
+      variant: "default",
+    });
 
     // Reset form
     form.reset();
   } catch (error) {
     console.error('Error booking appointment:', error);
-
+    
     // Show error toast
-    const toastElement = document.createElement('div');
-    toastElement.className = 'fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded shadow-lg z-50';
-    toastElement.textContent = error instanceof Error ? error.message : 'Failed to book appointment. Please try again.';
-    document.body.appendChild(toastElement);
-
-    // Remove toast after 5 seconds
-    setTimeout(() => {
-      toastElement.remove();
-    }, 5000);
+    toast({
+      title: "Booking Failed",
+      description: error instanceof Error ? error.message : 'Failed to book appointment. Please try again.',
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
   }
 };
 
