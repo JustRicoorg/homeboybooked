@@ -1,15 +1,48 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Calendar, Check, User } from "lucide-react";
+import { ArrowRight, Calendar as CalendarIcon, Check, User } from "lucide-react";
 import { useState } from "react";
 import AboutUs from "@/components/sections/AboutUs";
 import Gallery from "@/components/sections/Gallery";
 import Contact from "@/components/sections/Contact";
+import { addMonths, format, isBefore, isAfter, startOfToday } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
   const { toast } = useToast();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
+  // Date range limits
+  const today = startOfToday();
+  const twoMonthsFromNow = addMonths(today, 2);
+
+  // Generate time slots based on the selected date
+  const generateTimeSlots = () => {
+    const timeSlots = [];
+    const currentDate = new Date();
+    const isToday = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd');
+    
+    const startHour = isToday ? currentDate.getHours() + 1 : 9; // If today, start from next hour
+    const endHour = 19; // End at 7 PM
+    
+    for (let hour = startHour; hour <= endHour; hour++) {
+      const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      timeSlots.push(`${formattedHour}:00 ${ampm}`);
+      if (hour < endHour) {
+        timeSlots.push(`${formattedHour}:30 ${ampm}`);
+      }
+    }
+    
+    return timeSlots;
+  };
+  
+  const availableTimeSlots = selectedDate ? generateTimeSlots() : [];
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +98,7 @@ const Index = () => {
 
       // Reset form
       form.reset();
+      setSelectedDate(undefined);
     } catch (error) {
       console.error('Error booking appointment:', error);
       
@@ -86,7 +120,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/d1876373-619b-45cd-aa41-cd9802d0b18c.png" 
+              src="/lovable-uploads/5a80ae40-a0f0-45fd-a24b-9f6f5ff56e5a.png" 
               alt="HOMEBOY Barbing Saloon Logo" 
               className="h-12 w-auto"
             />
@@ -141,7 +175,7 @@ const Index = () => {
           <div className="md:w-1/2 flex justify-center">
             <div className="w-full max-w-md aspect-square rounded-lg flex items-center justify-center overflow-hidden">
               <img 
-                src="/lovable-uploads/d1876373-619b-45cd-aa41-cd9802d0b18c.png"
+                src="/lovable-uploads/5a80ae40-a0f0-45fd-a24b-9f6f5ff56e5a.png"
                 alt="HOMEBOY Barbing Saloon Logo"
                 className="w-full h-full object-contain"
               />
@@ -233,17 +267,48 @@ const Index = () => {
                   <div>
                     <label htmlFor="date" className="block mb-2 font-medium">Date</label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Calendar className="text-gray-400" size={16} />
-                      </div>
-                      <input type="date" id="date" className="pl-10 w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2" required />
+                      <input 
+                        type="hidden" 
+                        id="date" 
+                        value={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''} 
+                        required 
+                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex items-center w-full h-10 rounded-md border border-gray-300 bg-white pl-3 pr-3 py-2 text-left text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
+                            {selectedDate ? format(selectedDate, 'PPP') : <span className="text-gray-400">Select a date</span>}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            disabled={(date) => 
+                              isBefore(date, today) || isAfter(date, twoMonthsFromNow)
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
                   <div>
                     <label htmlFor="time" className="block mb-2 font-medium">Time</label>
-                    <select id="time" className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2" required>
-                      <option value="">Select a time</option>
-                      {timeSlots.map((time, index) => <option key={index} value={time}>{time}</option>)}
+                    <select 
+                      id="time" 
+                      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2" 
+                      required
+                      disabled={!selectedDate}
+                    >
+                      <option value="">{selectedDate ? "Select a time" : "Select a date first"}</option>
+                      {availableTimeSlots.map((time, index) => 
+                        <option key={index} value={time}>{time}</option>
+                      )}
                     </select>
                   </div>
                 </div>
@@ -254,7 +319,7 @@ const Index = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-[#1A1F2C] text-white hover:bg-[#151a24]"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !selectedDate}
                 >
                   {isSubmitting ? "Processing..." : "Book Appointment"}
                 </Button>
@@ -271,7 +336,7 @@ const Index = () => {
             <div>
               <div className="flex items-center mb-4">
                 <img 
-                  src="/lovable-uploads/d1876373-619b-45cd-aa41-cd9802d0b18c.png" 
+                  src="/lovable-uploads/5a80ae40-a0f0-45fd-a24b-9f6f5ff56e5a.png" 
                   alt="HOMEBOY Barbing Saloon Logo" 
                   className="h-16 w-auto mr-3"
                 />
@@ -326,8 +391,5 @@ const services = [{
   description: "Haircut, beard trim, and premium styling with quality products.",
   price: 1000
 }];
-
-// Sample time slots
-const timeSlots = ["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM"];
 
 export default Index;
