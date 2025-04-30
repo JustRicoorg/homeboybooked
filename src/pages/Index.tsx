@@ -11,14 +11,85 @@ const Index = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Get form elements
+    const form = e.target as HTMLFormElement;
+    const nameInput = form.querySelector('#name') as HTMLInputElement;
+    const emailInput = form.querySelector('#email') as HTMLInputElement;
+    const phoneInput = form.querySelector('#phone') as HTMLInputElement;
+    const serviceInput = form.querySelector('#service') as HTMLSelectElement;
+    const dateInput = form.querySelector('#date') as HTMLInputElement;
+    const timeInput = form.querySelector('#time') as HTMLSelectElement;
+    const notesInput = form.querySelector('#notes') as HTMLTextAreaElement;
+
+    // Create booking data object
+    const bookingData = {
+      name: nameInput.value,
+      email: emailInput.value,
+      phone: phoneInput.value,
+      service: serviceInput.value,
+      date: dateInput.value,
+      time: timeInput.value,
+      notes: notesInput.value
+    };
+
+    try {
+      console.log('Submitting booking data:', bookingData);
+      
+      // Call the Supabase Edge Function endpoint
+      const response = await fetch('https://qnasrupzjxawilizwelf.supabase.co/functions/v1/create-notion-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to book appointment');
+      }
+
+      console.log('Booking response:', data);
+
+      // Show success toast
+      toast({
+        title: "Appointment Booked!",
+        description: "Your appointment has been successfully booked. We will contact you shortly for confirmation.",
+        variant: "default",
+      });
+
+      // Reset form
+      form.reset();
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      
+      // Show error toast
+      toast({
+        title: "Booking Failed",
+        description: error instanceof Error ? error.message : 'Failed to book appointment. Please try again.',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navbar */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-xl text-gray-900">HOMEBOY</span>
-            <span className="text-sm text-gray-600">Barbing Saloon</span>
+            <img 
+              src="/lovable-uploads/d1876373-619b-45cd-aa41-cd9802d0b18c.png" 
+              alt="HOMEBOY Barbing Saloon Logo" 
+              className="h-12 w-auto"
+            />
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#home" className="text-gray-900 hover:text-black">Home</a>
@@ -68,11 +139,12 @@ const Index = () => {
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <div className="w-full max-w-md aspect-square bg-[#F1F1F1] rounded-lg flex items-center justify-center">
-              <div className="text-[#8E9196] text-center">
-                <p>Barber Image</p>
-                <p className="text-sm">(Upload your barber shop image here)</p>
-              </div>
+            <div className="w-full max-w-md aspect-square rounded-lg flex items-center justify-center overflow-hidden">
+              <img 
+                src="/lovable-uploads/d1876373-619b-45cd-aa41-cd9802d0b18c.png"
+                alt="HOMEBOY Barbing Saloon Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
         </div>
@@ -197,8 +269,14 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">HOMEBOY</h3>
-              <p className="text-gray-600">Professional Barbing Saloon providing quality haircuts and styling services.</p>
+              <div className="flex items-center mb-4">
+                <img 
+                  src="/lovable-uploads/d1876373-619b-45cd-aa41-cd9802d0b18c.png" 
+                  alt="HOMEBOY Barbing Saloon Logo" 
+                  className="h-16 w-auto mr-3"
+                />
+              </div>
+              <p className="text-gray-400">Professional Barbing Saloon providing quality haircuts and styling services.</p>
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Contact Us</h3>
@@ -251,74 +329,5 @@ const services = [{
 
 // Sample time slots
 const timeSlots = ["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM"];
-
-// Form submission handler
-const handleBookingSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-
-  // Get form elements
-  const form = e.target as HTMLFormElement;
-  const nameInput = form.querySelector('#name') as HTMLInputElement;
-  const emailInput = form.querySelector('#email') as HTMLInputElement;
-  const phoneInput = form.querySelector('#phone') as HTMLInputElement;
-  const serviceInput = form.querySelector('#service') as HTMLSelectElement;
-  const dateInput = form.querySelector('#date') as HTMLInputElement;
-  const timeInput = form.querySelector('#time') as HTMLSelectElement;
-  const notesInput = form.querySelector('#notes') as HTMLTextAreaElement;
-
-  // Create booking data object
-  const bookingData = {
-    name: nameInput.value,
-    email: emailInput.value,
-    phone: phoneInput.value,
-    service: serviceInput.value,
-    date: dateInput.value,
-    time: timeInput.value,
-    notes: notesInput.value
-  };
-
-  try {
-    console.log('Submitting booking data:', bookingData);
-    
-    // Call the Supabase Edge Function endpoint
-    const response = await fetch('https://qnasrupzjxawilizwelf.supabase.co/functions/v1/create-notion-booking', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(bookingData),
-    });
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to book appointment');
-    }
-
-    console.log('Booking response:', data);
-
-    // Show success toast
-    toast({
-      title: "Appointment Booked!",
-      description: "Your appointment has been successfully booked. We will contact you shortly for confirmation.",
-      variant: "default",
-    });
-
-    // Reset form
-    form.reset();
-  } catch (error) {
-    console.error('Error booking appointment:', error);
-    
-    // Show error toast
-    toast({
-      title: "Booking Failed",
-      description: error instanceof Error ? error.message : 'Failed to book appointment. Please try again.',
-      variant: "destructive",
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
 export default Index;

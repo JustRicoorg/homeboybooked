@@ -47,6 +47,9 @@ const Gallery = () => {
           </Carousel>
         </div>
 
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-medium text-gray-800">See more on our social media</h3>
+        </div>
         <SocialLinks />
       </div>
     </section>
