@@ -6,7 +6,7 @@ import { Resend } from 'https://esm.sh/resend@2.0.0'
 // Configuration
 const SUPABASE_URL = 'https://qnasrupzjxawilizwelf.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuYXNydXB6anhhd2lsaXp3ZWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2ODcxMjgsImV4cCI6MjA2MTI2MzEyOH0.kOZ0OHI-OBoo_PQ8o3KUU9T-z9YI42raUHZqnvXwAWY'
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') || ''
+const RESEND_API_KEY = 're_amWSstmM_N3fNwFbrdfKWcG16AWj3XUf7'
 
 const resend = new Resend(RESEND_API_KEY);
 

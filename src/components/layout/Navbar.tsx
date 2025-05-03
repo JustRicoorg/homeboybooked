@@ -1,34 +1,121 @@
 
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { useMobile } from '@/hooks/use-mobile';
 
-type NavbarProps = {
-  onBookNow: () => void;
+interface NavbarProps {
+  onBookNow?: () => void;
 }
 
-const Navbar = ({ onBookNow }: NavbarProps) => {
+const Navbar: React.FC<NavbarProps> = ({ onBookNow }) => {
+  const isMobile = useMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+
+  const handleScroll = () => {
+    const offset = window.scrollY;
+    setScrolled(offset > 50);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
+  const navItems = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/#about' },
+    { label: 'Services', href: '/#services' },
+    { label: 'Gallery', href: '/#gallery' },
+    { label: 'Products', href: '/products' },
+    { label: 'Contact', href: '/#contact' },
+  ];
+
+  const isActive = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    return location.pathname === href || location.hash === href.substring(1);
+  };
+
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/1146c6dd-75d5-441d-94e3-2b25ee10bdd5.png" 
-            alt="HOMEBOY Barbing Saloon Logo" 
-            className="h-20 w-auto"
-          />
-        </div>
-        <nav className="hidden md:flex items-center gap-6">
-          <a href="#home" className="text-gray-900 hover:text-black">Home</a>
-          <a href="#about" className="text-gray-900 hover:text-black">About</a>
-          <a href="#services" className="text-gray-900 hover:text-black">Services</a>
-          <a href="#gallery" className="text-gray-900 hover:text-black">Gallery</a>
-          <a href="#contact" className="text-gray-900 hover:text-black">Contact</a>
-        </nav>
-        <Button onClick={onBookNow} className="bg-gray-900 text-white hover:bg-gray-800">
-          Book Appointment
-        </Button>
+    <nav className={`py-3 px-4 lg:px-8 fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
+      <div className="container mx-auto flex items-center justify-between">
+        <Link to="/" className="flex items-center">
+          <span className="text-xl font-bold text-[#1A1F2C]">HOMEBOY BARBING</span>
+        </Link>
+
+        {/* Mobile menu button */}
+        {isMobile && (
+          <button onClick={toggleMenu} className="text-[#1A1F2C] focus:outline-none">
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
+
+        {/* Desktop menu */}
+        {!isMobile && (
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mr-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={`px-3 py-2 text-sm hover:text-black transition-colors ${
+                    isActive(item.href) ? 'text-black font-medium' : 'text-gray-600'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            {onBookNow && (
+              <Button className="bg-[#1A1F2C] text-white hover:bg-black" onClick={onBookNow}>
+                Book Appointment
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Mobile menu */}
+        {isMobile && isMenuOpen && (
+          <div className="fixed inset-0 top-[61px] bg-white z-40 flex flex-col p-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className={`px-3 py-4 text-lg border-b border-gray-100 ${
+                  isActive(item.href) ? 'text-black font-medium' : 'text-gray-600'
+                }`}
+                onClick={closeMenu}
+              >
+                {item.label}
+              </Link>
+            ))}
+            {onBookNow && (
+              <div className="mt-4 px-3">
+                <Button className="bg-[#1A1F2C] text-white hover:bg-black w-full" onClick={() => {
+                  closeMenu();
+                  onBookNow();
+                }}>
+                  Book Appointment
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </header>
+    </nav>
   );
 };
 

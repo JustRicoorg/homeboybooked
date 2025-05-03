@@ -11,7 +11,8 @@ const Gallery = () => {
     '/lovable-uploads/2a0e716b-063b-4fb2-a96f-cc319f9ea0ce.png',
     '/lovable-uploads/35a1de13-abca-4df9-bc7e-a02bb9b27f6c.png',
     '/lovable-uploads/cc2dae37-b995-437d-bb5f-7ac93acb8898.png',
-    '/lovable-uploads/41648bb2-a34d-4396-a0ac-ccadcc5d6d62.png'
+    '/lovable-uploads/41648bb2-a34d-4396-a0ac-ccadcc5d6d62.png',
+    '/lovable-uploads/e38e578c-fada-4af0-8bb6-dac325ebd8e8.png'
   ];
 
   return (
@@ -28,11 +29,12 @@ const Gallery = () => {
             <CarouselContent>
               {images.map((image, index) => (
                 <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="relative aspect-square">
+                  <div className="relative aspect-square p-1">
                     <img 
                       src={image} 
                       alt={`Gallery image ${index + 1}`} 
-                      className="w-full h-full rounded-lg hover:opacity-90 transition-opacity cursor-pointer hover:scale-105 transform duration-200 fade-in object-cover" 
+                      className="w-full h-full object-cover rounded-lg shadow-md hover:opacity-90 transition-opacity hover:scale-105 transform duration-200 fade-in" 
+                      loading="lazy"
                       onError={(e) => {
                         console.error(`Failed to load image: ${image}`);
                         e.currentTarget.src = '/placeholder.svg'; // Fallback to placeholder
