@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { User, Calendar as CalendarIcon } from "lucide-react";
-import { addMonths, format, isBefore, isAfter, startOfToday, addDays } from "date-fns";
+import { addMonths, format, isBefore, isAfter, startOfToday, addDays, addWeeks, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 type Service = {
@@ -28,7 +27,13 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
 
   // Date range limits
   const today = startOfToday();
-  const twoMonthsFromNow = addMonths(today, 2);
+  const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const endOfCurrentMonth = endOfMonth(today);
+  
+  // Allow booking in the next month if we're in the last week of current month
+  const isLastWeekOfMonth = isAfter(today, addDays(endOfCurrentMonth, -7));
+  const bookingEndDate = isLastWeekOfMonth ? endOfMonth(nextMonth) : endOfCurrentMonth;
 
   // Generate time slots based on the selected date
   const generateTimeSlots = () => {
@@ -107,12 +112,24 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
         body: JSON.stringify(bookingData),
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
+        const data = await response.json();
+        
+        // Handle specific error cases
+        if (response.status === 409) {
+          toast({
+            title: "Time Slot Unavailable",
+            description: "This time slot is already booked. Please select a different time.",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
         throw new Error(data.error || 'Failed to book appointment');
       }
 
+      const data = await response.json();
       console.log('Booking response:', data);
 
       // Show success toast
@@ -203,7 +220,7 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
                           selected={selectedDate}
                           onSelect={setSelectedDate}
                           disabled={(date) => 
-                            isBefore(date, today) || isAfter(date, twoMonthsFromNow)
+                            isBefore(date, today) || isAfter(date, bookingEndDate)
                           }
                           initialFocus
                           className="pointer-events-auto"
