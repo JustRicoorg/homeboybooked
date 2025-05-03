@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Calendar as CalendarIcon, Check, User } from "lucide-react";
@@ -10,6 +9,7 @@ import { addMonths, format, isBefore, isAfter, startOfToday, addDays } from "dat
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { toast } = useToast();
@@ -81,16 +81,16 @@ const Index = () => {
       email: emailInput.value,
       phone: phoneInput.value,
       service: serviceInput.value,
-      date: dateInput.value,
-      time: timeInput.value,
+      booking_date: dateInput.value,
+      booking_time: timeInput.value,
       notes: notesInput.value
     };
 
     try {
       console.log('Submitting booking data:', bookingData);
       
-      // Call the Supabase Edge Function endpoint
-      const response = await fetch('https://qnasrupzjxawilizwelf.supabase.co/functions/v1/create-notion-booking', {
+      // Call the Supabase Edge Function
+      const response = await fetch('https://qnasrupzjxawilizwelf.supabase.co/functions/v1/send-booking-confirmation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
