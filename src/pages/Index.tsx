@@ -14,15 +14,11 @@ import { Service } from "@/data/services";
 
 const Index = () => {
   const { toast } = useToast();
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<string | undefined>(undefined);
 
   const scrollToBooking = () => {
-    setIsBookingOpen(true);
-    setTimeout(() => {
-      const bookingSection = document.getElementById('booking');
-      bookingSection?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    const bookingSection = document.getElementById('booking');
+    bookingSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const scrollToServices = () => {
@@ -31,7 +27,6 @@ const Index = () => {
   };
 
   const handleBookService = (service: Service) => {
-    setIsBookingOpen(true);
     setSelectedService(service.name);
     
     setTimeout(() => {
@@ -50,13 +45,14 @@ const Index = () => {
       <Navbar onBookNow={scrollToBooking} />
       <Hero onViewServices={scrollToServices} onBookNow={scrollToBooking} />
       <AboutUs />
-      <Services services={serviceData.slice(0, 2)} onBookService={handleBookService} />
+      <Services services={serviceData} onBookService={handleBookService} />
       <Gallery />
       <Contact />
-      {isBookingOpen && <BookingForm services={serviceData} selectedService={selectedService} />}
+      <BookingForm services={serviceData} selectedService={selectedService} />
       <Footer />
     </div>
   );
 };
 
 export default Index;
+

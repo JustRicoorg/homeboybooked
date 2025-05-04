@@ -42,11 +42,16 @@ const Navbar: React.FC<NavbarProps> = ({ onBookNow }) => {
     { label: 'Gallery', href: '/#gallery' },
     { label: 'Products', href: '/products' },
     { label: 'Contact', href: '/#contact' },
+    { label: 'Book', href: '/#booking' },
   ];
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
-    return location.pathname === href || location.hash === href.substring(1);
+    if (href.includes('#')) {
+      const hash = href.substring(href.indexOf('#'));
+      return location.hash === hash;
+    }
+    return location.pathname === href;
   };
 
   return (
