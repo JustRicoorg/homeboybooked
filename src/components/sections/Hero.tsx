@@ -11,7 +11,7 @@ const Hero = ({ onViewServices, onBookNow }: HeroProps) => {
   return (
     <section id="home" className="bg-gray-900 text-white py-20">
       <div className="container mx-auto px-4 flex flex-col md:flex-row items-center">
-        <div className="md:w-1/2 mb-10 md:mb-0">
+        <div className="md:w-1/2 mb-10 md:mb-0 pt-24 md:pt-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Professional Haircuts & Styling</h1>
           <p className="text-xl mb-8">Experience the best haircut and styling at Homeboy Barbing Saloon. We pride ourselves on quality service.</p>
           <div className="flex gap-4">
@@ -31,13 +31,7 @@ const Hero = ({ onViewServices, onBookNow }: HeroProps) => {
           </div>
         </div>
         <div className="md:w-1/2 flex justify-center">
-          <div className="w-full max-w-md overflow-hidden rounded-lg">
-            <img 
-              src="/lovable-uploads/aaa02fad-5340-437b-86f0-858f40155208.png"
-              alt="Barber shop interior"
-              className="w-full h-auto object-cover"
-            />
-          </div>
+          {/* The image has been removed as requested */}
         </div>
       </div>
     </section>

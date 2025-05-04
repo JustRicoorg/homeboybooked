@@ -6,13 +6,12 @@ import SocialLinks from './SocialLinks';
 
 const Gallery = () => {
   const images = [
-    '/lovable-uploads/824b3e0e-8ed0-4046-8e7d-efcad4bc51cd.png',
-    '/lovable-uploads/1a564743-278c-411e-b2a1-82bf86a70ec7.png',
-    '/lovable-uploads/2a0e716b-063b-4fb2-a96f-cc319f9ea0ce.png',
-    '/lovable-uploads/35a1de13-abca-4df9-bc7e-a02bb9b27f6c.png',
-    '/lovable-uploads/cc2dae37-b995-437d-bb5f-7ac93acb8898.png',
-    '/lovable-uploads/41648bb2-a34d-4396-a0ac-ccadcc5d6d62.png',
-    '/lovable-uploads/e38e578c-fada-4af0-8bb6-dac325ebd8e8.png'
+    '/lovable-uploads/4d036331-626b-4aaa-a83e-38ba6e9e9299.png',
+    '/lovable-uploads/0a5af72d-c152-4a91-a06b-06e19608f699.png',
+    '/lovable-uploads/f78f7a7d-771a-4206-bd67-6c80860c2b84.png',
+    '/lovable-uploads/1ea2e1e6-3e25-4c59-8d4b-b12f9c09eb08.png',
+    '/lovable-uploads/ad7bbf1d-e4be-4b08-9209-3f6f2bd06c48.png',
+    '/lovable-uploads/619e41c6-e0d6-4cc2-b7dd-69d9fa23ed2e.png'
   ];
 
   return (

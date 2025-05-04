@@ -58,7 +58,11 @@ const Navbar: React.FC<NavbarProps> = ({ onBookNow }) => {
     <nav className={`py-3 px-4 lg:px-8 fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
       <div className="container mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <span className="text-xl font-bold text-[#1A1F2C]">HOMEBOY BARBING</span>
+          <img 
+            src="/lovable-uploads/3cbbe2f3-abf0-417b-80f1-069a5e6fe457.png" 
+            alt="Homeboy Barbing Shop Logo" 
+            className="h-16 w-auto"
+          />
         </Link>
 
         {/* Mobile menu button */}
