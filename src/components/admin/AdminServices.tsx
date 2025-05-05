@@ -1,35 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Edit, Trash, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-
-// Define our Service interface to match the database structure
-interface Service {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-}
+import { Service } from "@/types/service";
+import { fetchServices, updateService, createService, deleteService } from "@/services/serviceApi";
+import ServiceList from "./services/ServiceList";
+import AddServiceButton from "./services/AddServiceButton";
 
 const AdminServices = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [newService, setNewService] = useState<Service>({
-    id: 0, // This will be ignored when inserting
+  const [newService, setNewService] = useState<Partial<Service>>({
     name: "",
     description: "",
     price: 0
@@ -37,19 +18,14 @@ const AdminServices = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchServices();
+    loadServices();
   }, []);
 
-  const fetchServices = async () => {
+  const loadServices = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .order('id');
-      
-      if (error) throw error;
-      setServices(data || []);
+      const servicesData = await fetchServices();
+      setServices(servicesData);
     } catch (error: any) {
       toast({
         title: "Error fetching services",
@@ -64,55 +40,25 @@ const AdminServices = () => {
   const handleSaveService = async () => {
     try {
       if (editingService) {
-        // Ensure we have all required fields when updating
-        if (!editingService.name || !editingService.description || editingService.price === undefined) {
-          throw new Error("Please fill in all required fields");
-        }
-        
-        const { error } = await supabase
-          .from('services')
-          .update({
-            name: editingService.name,
-            description: editingService.description,
-            price: editingService.price
-          })
-          .eq('id', editingService.id);
-        
-        if (error) throw error;
-        
+        await updateService(editingService as Service);
         toast({
           title: "Service updated",
           description: "The service has been updated successfully"
         });
       } else {
-        // Ensure we have all required fields when creating
-        if (!newService.name || !newService.description || newService.price === undefined) {
-          throw new Error("Please fill in all required fields");
-        }
-        
-        const { error } = await supabase
-          .from('services')
-          .insert({
-            name: newService.name,
-            description: newService.description,
-            price: newService.price
-          });
-        
-        if (error) throw error;
-        
+        await createService(newService as Omit<Service, "id">);
         toast({
           title: "Service added",
           description: "The new service has been added successfully"
         });
         setNewService({
-          id: 0,
           name: "",
           description: "",
           price: 0
         });
       }
       
-      fetchServices();
+      loadServices();
       setEditingService(null);
     } catch (error: any) {
       toast({
@@ -127,19 +73,13 @@ const AdminServices = () => {
     if (!confirm("Are you sure you want to delete this service?")) return;
     
     try {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
+      await deleteService(id);
       toast({
         title: "Service deleted",
         description: "The service has been deleted successfully"
       });
       
-      fetchServices();
+      loadServices();
     } catch (error: any) {
       toast({
         title: "Error deleting service",
@@ -153,132 +93,22 @@ const AdminServices = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Manage Services</h2>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Service
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Add New Service</SheetTitle>
-            </SheetHeader>
-            <div className="space-y-4 mt-6">
-              <div className="space-y-2">
-                <label htmlFor="name">Service Name</label>
-                <Input
-                  id="name"
-                  value={newService.name}
-                  onChange={(e) => setNewService({...newService, name: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="description">Description</label>
-                <Textarea
-                  id="description"
-                  value={newService.description}
-                  onChange={(e) => setNewService({...newService, description: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="price">Price (NGN)</label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={newService.price?.toString() || "0"}
-                  onChange={(e) => setNewService({...newService, price: parseFloat(e.target.value)})}
-                />
-              </div>
-              <Button className="w-full" onClick={handleSaveService}>
-                Add Service
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
+        <AddServiceButton
+          newService={newService}
+          onNewServiceChange={setNewService}
+          onAddService={handleSaveService}
+        />
       </div>
       
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">Loading...</TableCell>
-              </TableRow>
-            ) : services.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">No services found</TableCell>
-              </TableRow>
-            ) : (
-              services.map((service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.name}</TableCell>
-                  <TableCell>{service.description}</TableCell>
-                  <TableCell>₦{service.price}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Sheet>
-                        <SheetTrigger asChild>
-                          <Button variant="outline" size="icon" onClick={() => setEditingService(service)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent>
-                          <SheetHeader>
-                            <SheetTitle>Edit Service</SheetTitle>
-                          </SheetHeader>
-                          {editingService && (
-                            <div className="space-y-4 mt-6">
-                              <div className="space-y-2">
-                                <label htmlFor="edit-name">Service Name</label>
-                                <Input
-                                  id="edit-name"
-                                  value={editingService.name}
-                                  onChange={(e) => setEditingService({...editingService, name: e.target.value})}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label htmlFor="edit-description">Description</label>
-                                <Textarea
-                                  id="edit-description"
-                                  value={editingService.description}
-                                  onChange={(e) => setEditingService({...editingService, description: e.target.value})}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label htmlFor="edit-price">Price (NGN)</label>
-                                <Input
-                                  id="edit-price"
-                                  type="number"
-                                  value={editingService.price.toString()}
-                                  onChange={(e) => setEditingService({...editingService, price: parseFloat(e.target.value)})}
-                                />
-                              </div>
-                              <Button className="w-full" onClick={handleSaveService}>
-                                Update Service
-                              </Button>
-                            </div>
-                          )}
-                        </SheetContent>
-                      </Sheet>
-                      <Button variant="outline" size="icon" onClick={() => handleDeleteService(service.id)}>
-                        <Trash className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <ServiceList
+        services={services}
+        loading={loading}
+        editingService={editingService}
+        onEditService={setEditingService}
+        onDeleteService={handleDeleteService}
+        onUpdateService={handleSaveService}
+        onServiceFormChange={setEditingService}
+      />
     </div>
   );
 };
