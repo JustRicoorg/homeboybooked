@@ -6,8 +6,14 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Trash, Upload } from "lucide-react";
 
+interface GalleryImage {
+  id: number;
+  image_url: string;
+  created_at?: string;
+}
+
 const AdminGallery = () => {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -19,13 +25,14 @@ const AdminGallery = () => {
   const fetchImages = async () => {
     setLoading(true);
     try {
+      // Fixed TypeScript error by using the correct table name
       const { data, error } = await supabase
         .from('gallery')
         .select('*')
         .order('id');
       
       if (error) throw error;
-      setImages((data || []).map((item: any) => item.image_url));
+      setImages(data || []);
     } catch (error: any) {
       toast({
         title: "Error fetching gallery",
@@ -66,7 +73,7 @@ const AdminGallery = () => {
       // Save image URL to the database
       const { error: dbError } = await supabase
         .from('gallery')
-        .insert([{ image_url: urlData.publicUrl }]);
+        .insert({ image_url: urlData.publicUrl });
       
       if (dbError) throw dbError;
       
@@ -89,28 +96,28 @@ const AdminGallery = () => {
     }
   };
 
-  const handleDeleteImage = async (imageUrl: string) => {
+  const handleDeleteImage = async (imageId: number, imageUrl: string) => {
     if (!confirm("Are you sure you want to delete this image?")) return;
     
     try {
-      // Extract the path from the URL
-      const path = imageUrl.substring(imageUrl.indexOf('images/') + 7);
-      
-      // Delete from storage
-      const { error: storageError } = await supabase
-        .storage
-        .from('images')
-        .remove([`gallery/${path}`]);
-      
-      if (storageError) throw storageError;
-      
-      // Delete from database
+      // Delete from database first
       const { error: dbError } = await supabase
         .from('gallery')
         .delete()
-        .eq('image_url', imageUrl);
+        .eq('id', imageId);
       
       if (dbError) throw dbError;
+      
+      // Try to extract the path from the URL and delete from storage if possible
+      try {
+        if (imageUrl.includes('gallery/')) {
+          const path = imageUrl.substring(imageUrl.indexOf('gallery/'));
+          await supabase.storage.from('images').remove([path]);
+        }
+      } catch (storageError) {
+        console.error("Failed to delete from storage:", storageError);
+        // Don't fail if storage deletion fails
+      }
       
       toast({
         title: "Image deleted",
@@ -156,18 +163,18 @@ const AdminGallery = () => {
           {images.length === 0 ? (
             <div className="col-span-full text-center py-8">No images in the gallery</div>
           ) : (
-            images.map((imageUrl, index) => (
-              <div key={index} className="relative group">
+            images.map((image) => (
+              <div key={image.id} className="relative group">
                 <img 
-                  src={imageUrl} 
-                  alt={`Gallery image ${index + 1}`} 
+                  src={image.image_url} 
+                  alt={`Gallery image ${image.id}`} 
                   className="w-full aspect-square object-cover rounded-md"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button 
                     variant="destructive" 
                     size="icon" 
-                    onClick={() => handleDeleteImage(imageUrl)}
+                    onClick={() => handleDeleteImage(image.id, image.image_url)}
                   >
                     <Trash className="h-4 w-4" />
                   </Button>

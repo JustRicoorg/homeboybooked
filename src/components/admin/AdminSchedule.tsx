@@ -13,8 +13,21 @@ import {
 } from "@/components/ui/table";
 import { Eye, RefreshCw } from "lucide-react";
 
+interface Booking {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  service: string;
+  booking_date: string;
+  booking_time: string;
+  notes: string | null;
+  status: string;
+  created_at: string;
+}
+
 const AdminSchedule = () => {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

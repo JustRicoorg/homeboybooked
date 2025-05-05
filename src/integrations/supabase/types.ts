@@ -48,6 +48,24 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery: {
+        Row: {
+          created_at: string | null
+          id: number
+          image_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          image_url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          image_url?: string
+        }
+        Relationships: []
+      }
       "homeboy Booking client": {
         Row: {
           created_at: string | null
@@ -81,6 +99,54 @@ export type Database = {
           phone?: string
           service?: string
           time?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          description: string
+          id: number
+          image_url: string
+          name: string
+          price: number
+        }
+        Insert: {
+          category: string
+          description: string
+          id?: number
+          image_url?: string
+          name: string
+          price: number
+        }
+        Update: {
+          category?: string
+          description?: string
+          id?: number
+          image_url?: string
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          description: string
+          id: number
+          name: string
+          price: number
+        }
+        Insert: {
+          description: string
+          id?: number
+          name: string
+          price: number
+        }
+        Update: {
+          description?: string
+          id?: number
+          name?: string
+          price?: number
         }
         Relationships: []
       }

@@ -20,9 +20,18 @@ import {
 } from "@/components/ui/table";
 import { Edit, Trash, Plus, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Product } from "@/data/products";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+// Define our Product interface to match the database structure
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
+  category: string;
+}
 
 const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,7 +41,7 @@ const AdminProducts = () => {
     name: "",
     description: "",
     price: 0,
-    imageUrl: "/placeholder.svg",
+    image_url: "/placeholder.svg",
     category: "hair"
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -113,7 +122,7 @@ const AdminProducts = () => {
             description: editingProduct.description,
             price: editingProduct.price,
             category: editingProduct.category,
-            ...(imageUrl && { imageUrl }),
+            ...(imageUrl && { image_url: imageUrl }),
           })
           .eq('id', editingProduct.id);
         
@@ -132,10 +141,10 @@ const AdminProducts = () => {
         
         const { error } = await supabase
           .from('products')
-          .insert([{
+          .insert({
             ...newProduct,
-            ...(imageUrl && { imageUrl }),
-          }]);
+            ...(imageUrl && { image_url: imageUrl }),
+          });
         
         if (error) throw error;
         
@@ -148,7 +157,7 @@ const AdminProducts = () => {
           name: "",
           description: "",
           price: 0,
-          imageUrl: "/placeholder.svg",
+          image_url: "/placeholder.svg",
           category: "hair"
         });
         setImageFile(null);
@@ -254,7 +263,7 @@ const AdminProducts = () => {
                 <div className="flex items-center gap-4">
                   <div className="h-20 w-20 bg-gray-100 rounded-md overflow-hidden">
                     <img 
-                      src={imageFile ? URL.createObjectURL(imageFile) : newProduct.imageUrl} 
+                      src={imageFile ? URL.createObjectURL(imageFile) : newProduct.image_url} 
                       alt="Product preview" 
                       className="h-full w-full object-cover"
                     />
@@ -312,7 +321,7 @@ const AdminProducts = () => {
                   <TableCell>
                     <div className="h-12 w-12 rounded overflow-hidden">
                       <img 
-                        src={product.imageUrl} 
+                        src={product.image_url} 
                         alt={product.name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
@@ -385,7 +394,7 @@ const AdminProducts = () => {
                                 <div className="flex items-center gap-4">
                                   <div className="h-20 w-20 bg-gray-100 rounded-md overflow-hidden">
                                     <img 
-                                      src={editImageFile ? URL.createObjectURL(editImageFile) : editingProduct.imageUrl} 
+                                      src={editImageFile ? URL.createObjectURL(editImageFile) : editingProduct.image_url} 
                                       alt="Product preview" 
                                       className="h-full w-full object-cover"
                                       onError={(e) => {

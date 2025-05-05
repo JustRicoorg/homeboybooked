@@ -13,9 +13,16 @@ import {
 } from "@/components/ui/table";
 import { Edit, Trash, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Service } from "@/data/services";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+// Define our Service interface to match the database structure
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+}
 
 const AdminServices = () => {
   const [services, setServices] = useState<Service[]>([]);
