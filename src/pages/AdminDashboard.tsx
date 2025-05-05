@@ -11,6 +11,7 @@ import AdminServices from "@/components/admin/AdminServices";
 import AdminGallery from "@/components/admin/AdminGallery";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminSchedule from "@/components/admin/AdminSchedule";
+import AdminAvailability from "@/components/admin/AdminAvailability";
 
 const AdminDashboard = () => {
   const [session, setSession] = useState<any>(null);
@@ -89,6 +90,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="gallery">Gallery</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
+              <TabsTrigger value="availability">Availability</TabsTrigger>
             </TabsList>
             
             <TabsContent value="services">
@@ -105,6 +107,10 @@ const AdminDashboard = () => {
             
             <TabsContent value="schedule">
               <AdminSchedule />
+            </TabsContent>
+
+            <TabsContent value="availability">
+              <AdminAvailability />
             </TabsContent>
           </Tabs>
         </Card>

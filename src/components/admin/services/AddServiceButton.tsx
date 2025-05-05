@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Service } from "@/types/service";
 import ServiceForm from "./ServiceForm";
 
@@ -25,12 +25,17 @@ const AddServiceButton: React.FC<AddServiceButtonProps> = ({
         </Button>
       </SheetTrigger>
       <SheetContent>
-        <ServiceForm
-          service={newService}
-          isEditing={false}
-          onChange={onNewServiceChange}
-          onSave={onAddService}
-        />
+        <SheetHeader>
+          <SheetTitle>Add New Service</SheetTitle>
+        </SheetHeader>
+        <div className="mt-6">
+          <ServiceForm
+            service={newService}
+            isEditing={false}
+            onChange={onNewServiceChange}
+            onSave={onAddService}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );
