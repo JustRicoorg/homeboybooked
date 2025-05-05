@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +36,8 @@ const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [newProduct, setNewProduct] = useState<Partial<Product>>({
+  const [newProduct, setNewProduct] = useState<Product>({
+    id: 0, // This will be ignored when inserting
     name: "",
     description: "",
     price: 0,
@@ -133,7 +133,7 @@ const AdminProducts = () => {
           description: "The product has been updated successfully"
         });
       } else {
-        // Handle create
+        // Handle create - Fix: Ensure all required fields are provided
         if (imageFile) {
           imageUrl = await uploadImage(imageFile);
           if (!imageUrl) return;
@@ -142,8 +142,11 @@ const AdminProducts = () => {
         const { error } = await supabase
           .from('products')
           .insert({
-            ...newProduct,
-            ...(imageUrl && { image_url: imageUrl }),
+            name: newProduct.name,
+            description: newProduct.description,
+            price: newProduct.price,
+            category: newProduct.category,
+            image_url: imageUrl || newProduct.image_url
           });
         
         if (error) throw error;
@@ -154,6 +157,7 @@ const AdminProducts = () => {
         });
         
         setNewProduct({
+          id: 0,
           name: "",
           description: "",
           price: 0,
@@ -245,7 +249,7 @@ const AdminProducts = () => {
                 <label htmlFor="category">Category</label>
                 <Select 
                   value={newProduct.category} 
-                  onValueChange={(value) => setNewProduct({...newProduct, category: value as any})}
+                  onValueChange={(value) => setNewProduct({...newProduct, category: value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
@@ -376,7 +380,7 @@ const AdminProducts = () => {
                                 <label htmlFor="edit-category">Category</label>
                                 <Select 
                                   value={editingProduct.category} 
-                                  onValueChange={(value) => setEditingProduct({...editingProduct, category: value as any})}
+                                  onValueChange={(value) => setEditingProduct({...editingProduct, category: value})}
                                 >
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select category" />

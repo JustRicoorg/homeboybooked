@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,8 @@ const AdminServices = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [newService, setNewService] = useState<Partial<Service>>({
+  const [newService, setNewService] = useState<Service>({
+    id: 0, // This will be ignored when inserting
     name: "",
     description: "",
     price: 0
@@ -79,9 +79,15 @@ const AdminServices = () => {
           description: "The service has been updated successfully"
         });
       } else {
+        // Fix: Don't pass the id when inserting a new service
+        const { name, description, price } = newService;
         const { error } = await supabase
           .from('services')
-          .insert([newService]);
+          .insert({
+            name,
+            description,
+            price
+          });
         
         if (error) throw error;
         
@@ -90,6 +96,7 @@ const AdminServices = () => {
           description: "The new service has been added successfully"
         });
         setNewService({
+          id: 0,
           name: "",
           description: "",
           price: 0
