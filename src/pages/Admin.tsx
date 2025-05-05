@@ -12,6 +12,7 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -29,18 +30,55 @@ const Admin = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorDetails(null);
+    
+    try {
+      // Only use this during initial setup - will be removed from production
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Sign-up initiated",
+        description: "Check your email to confirm your account",
+      });
+      
+      console.log("Sign up successful:", data);
+    } catch (error: any) {
+      toast({
+        title: "Sign-up failed",
+        description: error.message || "Please check your credentials",
+        variant: "destructive",
+      });
+      setErrorDetails(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorDetails(null);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
       
+      console.log("Login successful:", data);
       toast({
         title: "Login successful",
         description: "Welcome to the admin dashboard",
@@ -48,11 +86,13 @@ const Admin = () => {
       
       navigate("/admin/dashboard");
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
         description: error.message || "Please check your credentials",
         variant: "destructive",
       });
+      setErrorDetails(error.message);
     } finally {
       setLoading(false);
     }
@@ -95,6 +135,11 @@ const Admin = () => {
                 required
               />
             </div>
+            {errorDetails && (
+              <div className="p-3 text-sm bg-red-50 text-red-700 rounded-md">
+                Error: {errorDetails}
+              </div>
+            )}
             <Button 
               type="submit" 
               className="w-full" 
@@ -102,6 +147,18 @@ const Admin = () => {
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
+            <div className="text-center text-sm text-gray-500 pt-4">
+              <p>First time? Create your account:</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-2"
+                onClick={handleSignUp}
+                disabled={loading}
+              >
+                Sign Up Admin
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
