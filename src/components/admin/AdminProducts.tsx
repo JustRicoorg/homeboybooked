@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +110,11 @@ const AdminProducts = () => {
       let imageUrl;
       
       if (editingProduct) {
-        // Handle update
+        // Handle update - ensure all required fields are present
+        if (!editingProduct.name || !editingProduct.description || editingProduct.price === undefined || !editingProduct.category) {
+          throw new Error("Please fill in all required fields");
+        }
+        
         if (editImageFile) {
           imageUrl = await uploadImage(editImageFile);
           if (!imageUrl) return;
@@ -133,7 +138,11 @@ const AdminProducts = () => {
           description: "The product has been updated successfully"
         });
       } else {
-        // Handle create - Fix: Ensure all required fields are provided
+        // Handle create - ensure all required fields are present
+        if (!newProduct.name || !newProduct.description || newProduct.price === undefined || !newProduct.category) {
+          throw new Error("Please fill in all required fields");
+        }
+        
         if (imageFile) {
           imageUrl = await uploadImage(imageFile);
           if (!imageUrl) return;

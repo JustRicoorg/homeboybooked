@@ -35,23 +35,46 @@ const Navbar: React.FC<NavbarProps> = ({ onBookNow }) => {
     setIsMenuOpen(false);
   };
 
+  const scrollToSection = (id: string) => {
+    closeMenu();
+    if (location.pathname !== '/') {
+      window.location.href = `/#${id}`;
+      return;
+    }
+    
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const navItems = [
-    { label: 'Home', href: '/' },
-    { label: 'About', href: '/#about' },
-    { label: 'Services', href: '/#services' },
-    { label: 'Gallery', href: '/#gallery' },
-    { label: 'Products', href: '/products' },
-    { label: 'Contact', href: '/#contact' },
-    { label: 'Book', href: '/#booking' },
+    { label: 'Home', action: () => {
+      closeMenu();
+      if (location.pathname !== '/') {
+        window.location.href = '/';
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }},
+    { label: 'About', action: () => scrollToSection('about') },
+    { label: 'Services', action: () => scrollToSection('services') },
+    { label: 'Gallery', action: () => scrollToSection('gallery') },
+    { label: 'Products', action: () => {
+      closeMenu();
+      window.location.href = '/products';
+    }},
+    { label: 'Contact', action: () => scrollToSection('contact') },
   ];
 
-  const isActive = (href: string) => {
-    if (href === '/') return location.pathname === '/';
-    if (href.includes('#')) {
-      const hash = href.substring(href.indexOf('#'));
-      return location.hash === hash;
+  const isActive = (label: string) => {
+    if (label === 'Home') return location.pathname === '/' && !location.hash;
+    if (label === 'Products') return location.pathname === '/products';
+    if (location.hash) {
+      const hash = location.hash.substring(1);
+      return label.toLowerCase() === hash;
     }
-    return location.pathname === href;
+    return false;
   };
 
   return (
@@ -77,15 +100,15 @@ const Navbar: React.FC<NavbarProps> = ({ onBookNow }) => {
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-2 mr-4">
               {navItems.map((item) => (
-                <Link
+                <button
                   key={item.label}
-                  to={item.href}
+                  onClick={item.action}
                   className={`px-3 py-2 text-sm hover:text-black transition-colors ${
-                    isActive(item.href) ? 'text-black font-medium' : 'text-gray-600'
+                    isActive(item.label) ? 'text-black font-medium' : 'text-gray-600'
                   }`}
                 >
                   {item.label}
-                </Link>
+                </button>
               ))}
             </div>
             {onBookNow && (
@@ -100,16 +123,15 @@ const Navbar: React.FC<NavbarProps> = ({ onBookNow }) => {
         {isMobile && isMenuOpen && (
           <div className="fixed inset-0 top-[61px] bg-white z-40 flex flex-col p-4">
             {navItems.map((item) => (
-              <Link
+              <button
                 key={item.label}
-                to={item.href}
-                className={`px-3 py-4 text-lg border-b border-gray-100 ${
-                  isActive(item.href) ? 'text-black font-medium' : 'text-gray-600'
+                onClick={item.action}
+                className={`px-3 py-4 text-lg border-b border-gray-100 text-left ${
+                  isActive(item.label) ? 'text-black font-medium' : 'text-gray-600'
                 }`}
-                onClick={closeMenu}
               >
                 {item.label}
-              </Link>
+              </button>
             ))}
             {onBookNow && (
               <div className="mt-4 px-3">

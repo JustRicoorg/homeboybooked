@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,11 @@ const AdminServices = () => {
   const handleSaveService = async () => {
     try {
       if (editingService) {
+        // Ensure we have all required fields when updating
+        if (!editingService.name || !editingService.description || editingService.price === undefined) {
+          throw new Error("Please fill in all required fields");
+        }
+        
         const { error } = await supabase
           .from('services')
           .update({
@@ -79,14 +85,17 @@ const AdminServices = () => {
           description: "The service has been updated successfully"
         });
       } else {
-        // Fix: Don't pass the id when inserting a new service
-        const { name, description, price } = newService;
+        // Ensure we have all required fields when creating
+        if (!newService.name || !newService.description || newService.price === undefined) {
+          throw new Error("Please fill in all required fields");
+        }
+        
         const { error } = await supabase
           .from('services')
           .insert({
-            name,
-            description,
-            price
+            name: newService.name,
+            description: newService.description,
+            price: newService.price
           });
         
         if (error) throw error;
