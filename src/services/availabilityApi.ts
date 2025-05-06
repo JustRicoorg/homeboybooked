@@ -2,55 +2,60 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TimeSlot } from "@/types/service";
 
-export async function fetchAvailability(): Promise<TimeSlot[]> {
+export async function fetchTimeSlots(): Promise<TimeSlot[]> {
   const { data, error } = await supabase
     .from('availability')
     .select('*')
-    .order('date', { ascending: true })
-    .order('startTime', { ascending: true });
+    .order('date');
   
   if (error) throw error;
-  return data || [];
+  
+  // Transform from database schema to TimeSlot interface
+  return (data || []).map(slot => ({
+    id: slot.id,
+    date: slot.date,
+    startTime: slot.starttime,
+    endTime: slot.endtime,
+    available: slot.available
+  }));
 }
 
-export async function updateAvailability(timeslot: TimeSlot): Promise<void> {
-  if (!timeslot.date || !timeslot.startTime || !timeslot.endTime) {
+export async function updateTimeSlot(timeSlot: TimeSlot): Promise<void> {
+  if (!timeSlot.date || !timeSlot.startTime || !timeSlot.endTime) {
     throw new Error("Please fill in all required fields");
   }
   
-  if (timeslot.id) {
-    const { error } = await supabase
-      .from('availability')
-      .update({
-        date: timeslot.date,
-        startTime: timeslot.startTime,
-        endTime: timeslot.endTime,
-        available: timeslot.available
-      })
-      .eq('id', timeslot.id);
-    
-    if (error) throw error;
-  }
+  const { error } = await supabase
+    .from('availability')
+    .update({
+      date: timeSlot.date,
+      starttime: timeSlot.startTime,
+      endtime: timeSlot.endTime,
+      available: timeSlot.available
+    })
+    .eq('id', timeSlot.id);
+  
+  if (error) throw error;
 }
 
-export async function createAvailability(timeslot: TimeSlot): Promise<void> {
-  if (!timeslot.date || !timeslot.startTime || !timeslot.endTime) {
+export async function createTimeSlot(timeSlot: Omit<TimeSlot, "id">): Promise<void> {
+  if (!timeSlot.date || !timeSlot.startTime || !timeSlot.endTime) {
     throw new Error("Please fill in all required fields");
   }
   
   const { error } = await supabase
     .from('availability')
     .insert({
-      date: timeslot.date,
-      startTime: timeslot.startTime,
-      endTime: timeslot.endTime,
-      available: timeslot.available !== undefined ? timeslot.available : true
+      date: timeSlot.date,
+      starttime: timeSlot.startTime,
+      endtime: timeSlot.endTime,
+      available: timeSlot.available
     });
   
   if (error) throw error;
 }
 
-export async function deleteAvailability(id: number): Promise<void> {
+export async function deleteTimeSlot(id: number): Promise<void> {
   const { error } = await supabase
     .from('availability')
     .delete()
