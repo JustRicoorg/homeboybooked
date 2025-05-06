@@ -68,13 +68,13 @@ const BookingForm = ({
       setIsSubmitting(false);
     }
   };
-  return <section id="booking" className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-2 text-center">Book an Appointment</h2>
-        <p className="text-[#8E9196] text-center mb-12">Schedule your next haircut with us</p>
+  return <section id="booking" className="py-20 bg-gray-200">
+      <div className="container mx-auto px-4 bg-gray-200">
+        <h2 className="text-3xl font-bold mb-2 text-center text-gray-950">Book an Appointment</h2>
+        <p className="text-center mb-12 text-black">Schedule your next haircut with us</p>
         
         <div className="max-w-2xl mx-auto">
-          <div className="bg-[#F1F1F1] p-6 md:p-8 rounded-lg">
+          <div className="p-6 md:p-8 rounded-lg bg-gray-100">
             <form onSubmit={handleBookingSubmit} className="space-y-6">
               <BookingFormFields services={services} selectedService={selectedService} selectedDate={selectedDate} setSelectedDate={setSelectedDate} isSubmitting={isSubmitting} />
               

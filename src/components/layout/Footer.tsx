@@ -4,7 +4,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center mb-4">
-              <img src="/lovable-uploads/1146c6dd-75d5-441d-94e3-2b25ee10bdd5.png" alt="HOMEBOY Barbing Saloon Logo" className="h-16 w-auto mr-3" />
+              <img alt="HOMEBOY Barbing Saloon Logo" className="h-16 w-auto mr-3" src="/lovable-uploads/3ba6c13f-8c91-4fee-8ef0-48c06ce50c69.png" />
             </div>
             <p className="text-gray-400">Professional Barbing Saloon providing quality haircuts and styling services.</p>
           </div>

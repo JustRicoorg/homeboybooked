@@ -2,7 +2,7 @@ import React from 'react';
 import { Contact as ContactIcon } from 'lucide-react';
 import Map from './Map';
 const Contact = () => {
-  return <section id="contact" className="py-20 bg-white">
+  return <section id="contact" className="py-20 bg-gray-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center gap-2 mb-2 fade-in">
           <ContactIcon className="w-6 h-6" />
@@ -11,7 +11,7 @@ const Contact = () => {
         <p className="text-gray-600 text-center mb-12 fade-in">Get in touch with us</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6 slide-in-from-left, m-20">
+          <div className="space-y-6 slide-in-from-left, m-20 bg-gray-200">
             <div>
               <h3 className="text-xl font-semibold mb-4">Visit Our Shop</h3>
               <p className="text-gray-600">Serekunda, Near the Newac</p>
