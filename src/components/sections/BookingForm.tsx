@@ -1,21 +1,22 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Service } from "@/data/services";
 import BookingFormFields from "../booking/BookingFormFields";
 import { submitBooking, BookingData } from "@/services/bookingService";
-
 type BookingFormProps = {
   services: Service[];
   selectedService?: string;
-}
-
-const BookingForm = ({ services, selectedService }: BookingFormProps) => {
-  const { toast } = useToast();
+};
+const BookingForm = ({
+  services,
+  selectedService
+}: BookingFormProps) => {
+  const {
+    toast
+  } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -40,7 +41,6 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
       booking_time: timeInput.value,
       notes: notesInput.value
     };
-
     try {
       const data = await submitBooking(bookingData);
       console.log('Booking response:', data);
@@ -49,7 +49,7 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
       toast({
         title: "Appointment Booked!",
         description: "Your appointment has been successfully booked. We will contact you shortly for confirmation.",
-        variant: "default",
+        variant: "default"
       });
 
       // Reset form
@@ -57,20 +57,18 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
       setSelectedDate(undefined);
     } catch (error) {
       console.error('Error booking appointment:', error);
-      
+
       // Show error toast
       toast({
         title: "Booking Failed",
         description: error instanceof Error ? error.message : 'Failed to book appointment. Please try again.',
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <section id="booking" className="py-20 bg-white">
+  return <section id="booking" className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold mb-2 text-center">Book an Appointment</h2>
         <p className="text-[#8E9196] text-center mb-12">Schedule your next haircut with us</p>
@@ -78,27 +76,15 @@ const BookingForm = ({ services, selectedService }: BookingFormProps) => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-[#F1F1F1] p-6 md:p-8 rounded-lg">
             <form onSubmit={handleBookingSubmit} className="space-y-6">
-              <BookingFormFields 
-                services={services} 
-                selectedService={selectedService}
-                selectedDate={selectedDate}
-                setSelectedDate={setSelectedDate}
-                isSubmitting={isSubmitting}
-              />
+              <BookingFormFields services={services} selectedService={selectedService} selectedDate={selectedDate} setSelectedDate={setSelectedDate} isSubmitting={isSubmitting} />
               
-              <Button 
-                type="submit" 
-                className="w-full bg-[#1A1F2C] text-white hover:bg-[#151a24]"
-                disabled={isSubmitting || !selectedDate}
-              >
+              <Button type="submit" disabled={isSubmitting || !selectedDate} className="w-full bg-[#1A1F2C] text-white hover:bg-[#151a24]">
                 {isSubmitting ? "Processing..." : "Book Appointment"}
               </Button>
             </form>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default BookingForm;
