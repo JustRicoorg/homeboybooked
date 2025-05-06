@@ -1,13 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { TimeSlot } from "@/types/service";
 import { Edit, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { format } from "date-fns";
-import TimeSlotForm from "./TimeSlotForm";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import TimeSlotForm from "./TimeSlotForm";
 
 interface TimeSlotListProps {
   timeSlots: TimeSlot[];
@@ -28,6 +27,8 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
   onUpdateTimeSlot,
   onTimeSlotFormChange,
 }) => {
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   if (loading) {
     return <div className="p-8 text-center">Loading availability...</div>;
   }
@@ -80,13 +81,21 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
-                      <Sheet>
+                      <Sheet open={sheetOpen && editingTimeSlot?.id === timeSlot.id} onOpenChange={(open) => {
+                        setSheetOpen(open);
+                        if (!open && editingTimeSlot?.id === timeSlot.id) {
+                          onTimeSlotFormChange(null);
+                        }
+                      }}>
                         <SheetTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => onEditTimeSlot(timeSlot)}>
+                          <Button variant="outline" size="sm" onClick={() => {
+                            onEditTimeSlot(timeSlot);
+                            setSheetOpen(true);
+                          }}>
                             <Edit className="h-4 w-4" />
                           </Button>
                         </SheetTrigger>
-                        <SheetContent>
+                        <SheetContent className="overflow-y-auto">
                           <SheetHeader>
                             <SheetTitle>Edit Time Slot</SheetTitle>
                           </SheetHeader>
@@ -96,7 +105,10 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
                                 timeSlot={editingTimeSlot}
                                 isEditing={true}
                                 onChange={(updated) => onTimeSlotFormChange(updated)}
-                                onSave={onUpdateTimeSlot}
+                                onSave={() => {
+                                  onUpdateTimeSlot();
+                                  setSheetOpen(false);
+                                }}
                               />
                             </div>
                           )}

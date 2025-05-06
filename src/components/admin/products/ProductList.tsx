@@ -29,12 +29,14 @@ const ProductList: React.FC<ProductListProps> = ({
 }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleSaveEdit = () => {
     if (editingProduct) {
       onEditProduct(editingProduct, editImageFile);
       setEditingProduct(null);
       setEditImageFile(null);
+      setSheetOpen(false);
     }
   };
 
@@ -89,13 +91,22 @@ const ProductList: React.FC<ProductListProps> = ({
                 <TableCell>₦{product.price}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Sheet>
+                    <Sheet open={sheetOpen && editingProduct?.id === product.id} onOpenChange={(open) => {
+                      setSheetOpen(open);
+                      if (!open) {
+                        setEditingProduct(null);
+                        setEditImageFile(null);
+                      }
+                    }}>
                       <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => setEditingProduct(product)}>
+                        <Button variant="outline" size="icon" onClick={() => {
+                          setEditingProduct(product);
+                          setSheetOpen(true);
+                        }}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent>
+                      <SheetContent className="overflow-y-auto">
                         <SheetHeader>
                           <SheetTitle>Edit Product</SheetTitle>
                         </SheetHeader>

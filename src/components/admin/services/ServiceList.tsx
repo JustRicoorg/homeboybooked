@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { Service } from "@/types/service";
@@ -33,6 +33,8 @@ const ServiceList: React.FC<ServiceListProps> = ({
   onUpdateService,
   onServiceFormChange,
 }) => {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -61,19 +63,30 @@ const ServiceList: React.FC<ServiceListProps> = ({
                 <TableCell>₦{service.price}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Sheet>
+                    <Sheet open={sheetOpen && editingService?.id === service.id} onOpenChange={(open) => {
+                      setSheetOpen(open);
+                      if (!open && editingService?.id === service.id) {
+                        onEditService(null as unknown as Service);
+                      }
+                    }}>
                       <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => onEditService(service)}>
+                        <Button variant="outline" size="icon" onClick={() => {
+                          onEditService(service);
+                          setSheetOpen(true);
+                        }}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent>
+                      <SheetContent className="overflow-y-auto">
                         {editingService && (
                           <ServiceForm
                             service={editingService}
                             isEditing={true}
                             onChange={onServiceFormChange}
-                            onSave={onUpdateService}
+                            onSave={() => {
+                              onUpdateService();
+                              setSheetOpen(false);
+                            }}
                           />
                         )}
                       </SheetContent>

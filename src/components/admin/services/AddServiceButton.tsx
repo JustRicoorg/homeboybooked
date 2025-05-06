@@ -17,14 +17,16 @@ const AddServiceButton: React.FC<AddServiceButtonProps> = ({
   onNewServiceChange,
   onAddService,
 }) => {
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Add Service
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Add New Service</SheetTitle>
         </SheetHeader>
@@ -33,7 +35,10 @@ const AddServiceButton: React.FC<AddServiceButtonProps> = ({
             service={newService}
             isEditing={false}
             onChange={onNewServiceChange}
-            onSave={onAddService}
+            onSave={() => {
+              onAddService();
+              setOpen(false);
+            }}
           />
         </div>
       </SheetContent>

@@ -21,14 +21,16 @@ const AddProductButton: React.FC<AddProductButtonProps> = ({
   onImageChange,
   onAddProduct,
 }) => {
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Add New Product</SheetTitle>
         </SheetHeader>
@@ -39,7 +41,10 @@ const AddProductButton: React.FC<AddProductButtonProps> = ({
             imageFile={imageFile}
             onProductChange={onNewProductChange}
             onImageChange={onImageChange}
-            onSave={onAddProduct}
+            onSave={() => {
+              onAddProduct();
+              setOpen(false);
+            }}
           />
         </div>
       </SheetContent>
