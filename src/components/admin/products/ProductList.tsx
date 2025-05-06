@@ -38,6 +38,16 @@ const ProductList: React.FC<ProductListProps> = ({
     }
   };
 
+  // Function to handle product change in the form
+  const handleProductChange = (product: Partial<Product>) => {
+    if (editingProduct && product) {
+      setEditingProduct({
+        ...editingProduct,
+        ...product
+      });
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -95,7 +105,7 @@ const ProductList: React.FC<ProductListProps> = ({
                               product={editingProduct}
                               isEditing={true}
                               imageFile={editImageFile}
-                              onProductChange={setEditingProduct}
+                              onProductChange={handleProductChange}
                               onImageChange={setEditImageFile}
                               onSave={handleSaveEdit}
                             />

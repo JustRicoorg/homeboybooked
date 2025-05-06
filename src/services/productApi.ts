@@ -9,7 +9,16 @@ export async function fetchProducts(): Promise<Product[]> {
     .order('id');
   
   if (error) throw error;
-  return data || [];
+  
+  // Ensure the category type is properly cast to match the Product interface
+  return (data || []).map(item => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    price: item.price,
+    image_url: item.image_url,
+    category: item.category as 'hair' | 'accessories' | 'tools' | 'other'
+  }));
 }
 
 export async function updateProduct(

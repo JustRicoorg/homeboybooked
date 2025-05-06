@@ -63,3 +63,9 @@ export async function deleteTimeSlot(id: number): Promise<void> {
   
   if (error) throw error;
 }
+
+// These are aliases for the AdminAvailability component to use
+export const fetchAvailability = fetchTimeSlots;
+export const updateAvailability = updateTimeSlot;
+export const createAvailability = createTimeSlot;
+export const deleteAvailability = deleteTimeSlot;
