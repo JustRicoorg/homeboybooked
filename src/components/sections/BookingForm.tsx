@@ -68,9 +68,9 @@ const BookingForm = ({
       setIsSubmitting(false);
     }
   };
-  return <section id="booking" className="py-20 bg-gray-200">
+  return <section id="booking" className="py-20 bg-gray-100">
       <div className="container mx-auto px-4 bg-gray-200">
-        <h2 className="text-3xl font-bold mb-2 text-center text-gray-950">Book an Appointment</h2>
+        <h2 className="text-3xl font-bold mb-2 text-center text-gray-950 py-[7px]">Book an Appointment</h2>
         <p className="text-center mb-12 text-black">Schedule your next haircut with us</p>
         
         <div className="max-w-2xl mx-auto">
