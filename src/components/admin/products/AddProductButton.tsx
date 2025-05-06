@@ -2,7 +2,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
 import { Product } from "@/types/product";
 import ProductForm from "./ProductForm";
 
@@ -23,6 +29,11 @@ const AddProductButton: React.FC<AddProductButtonProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
+  const handleSave = () => {
+    onAddProduct();
+    setOpen(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -30,21 +41,18 @@ const AddProductButton: React.FC<AddProductButtonProps> = ({
           <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
+      <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-md">
+        <SheetHeader className="mb-6">
           <SheetTitle>Add New Product</SheetTitle>
         </SheetHeader>
-        <div className="mt-6">
+        <div className="px-1">
           <ProductForm
             product={newProduct}
             isEditing={false}
             imageFile={imageFile}
             onProductChange={onNewProductChange}
             onImageChange={onImageChange}
-            onSave={() => {
-              onAddProduct();
-              setOpen(false);
-            }}
+            onSave={handleSave}
           />
         </div>
       </SheetContent>

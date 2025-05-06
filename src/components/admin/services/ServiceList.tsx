@@ -11,7 +11,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import ServiceForm from "./ServiceForm";
 
 interface ServiceListProps {
@@ -34,6 +34,11 @@ const ServiceList: React.FC<ServiceListProps> = ({
   onServiceFormChange,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
+  
+  const handleSave = () => {
+    onUpdateService();
+    setSheetOpen(false);
+  };
   
   return (
     <div className="rounded-md border">
@@ -69,25 +74,22 @@ const ServiceList: React.FC<ServiceListProps> = ({
                         onEditService(null as unknown as Service);
                       }
                     }}>
-                      <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => {
-                          onEditService(service);
-                          setSheetOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent className="overflow-y-auto">
+                      <Button variant="outline" size="icon" onClick={() => {
+                        onEditService(service);
+                        setSheetOpen(true);
+                      }}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-md">
                         {editingService && (
-                          <ServiceForm
-                            service={editingService}
-                            isEditing={true}
-                            onChange={onServiceFormChange}
-                            onSave={() => {
-                              onUpdateService();
-                              setSheetOpen(false);
-                            }}
-                          />
+                          <>
+                            <ServiceForm
+                              service={editingService}
+                              isEditing={true}
+                              onChange={onServiceFormChange}
+                              onSave={handleSave}
+                            />
+                          </>
                         )}
                       </SheetContent>
                     </Sheet>
