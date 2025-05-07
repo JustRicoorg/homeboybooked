@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("services");
 
   useEffect(() => {
     const checkSession = async () => {
@@ -84,7 +85,10 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto py-8 px-4">
         <Card className="p-6">
-          <Tabs defaultValue="services">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+          >
             <TabsList className="mb-6">
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="gallery">Gallery</TabsTrigger>
