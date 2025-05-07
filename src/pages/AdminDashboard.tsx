@@ -12,6 +12,7 @@ import AdminGallery from "@/components/admin/AdminGallery";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminSchedule from "@/components/admin/AdminSchedule";
 import AdminAvailability from "@/components/admin/AdminAvailability";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AdminDashboard = () => {
   const [session, setSession] = useState<any>(null);
@@ -19,6 +20,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("services");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -62,7 +64,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow-sm">
-        <div className="container mx-auto py-4 px-4 flex items-center justify-between">
+        <div className="container mx-auto py-4 px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img 
               src="/lovable-uploads/3cbbe2f3-abf0-417b-80f1-069a5e6fe457.png" 
@@ -77,19 +79,19 @@ const AdminDashboard = () => {
             </Link>
             <Button variant="ghost" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <span className={isMobile ? 'hidden' : 'inline'}>Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto py-8 px-4">
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <Tabs 
             value={activeTab} 
             onValueChange={setActiveTab}
           >
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 w-full flex-wrap">
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="gallery">Gallery</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>

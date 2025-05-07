@@ -11,7 +11,14 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, RefreshCw } from "lucide-react";
+import { Eye, Filter, RefreshCw } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Booking {
   id: string;
@@ -29,7 +36,9 @@ interface Booking {
 const AdminSchedule = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchBookings();
@@ -41,7 +50,7 @@ const AdminSchedule = () => {
       const { data, error } = await supabase
         .from('bookings')
         .select('*')
-        .order('booking_date', { ascending: false });
+        .order('booking_date', { ascending: sortOrder === 'oldest' });
       
       if (error) throw error;
       setBookings(data || []);
@@ -55,6 +64,10 @@ const AdminSchedule = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchBookings();
+  }, [sortOrder]);
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -102,22 +115,41 @@ const AdminSchedule = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold">Appointment Schedule</h2>
-        <Button variant="outline" onClick={fetchBookings}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                {sortOrder === 'newest' ? 'Newest First' : 'Oldest First'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSortOrder('newest')}>
+                Newest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOrder('oldest')}>
+                Oldest First
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button variant="outline" onClick={fetchBookings}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
       
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Time</TableHead>
-              <TableHead>Service</TableHead>
+              {!isMobile && <TableHead>Service</TableHead>}
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -125,19 +157,19 @@ const AdminSchedule = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
+                <TableCell colSpan={isMobile ? 5 : 6} className="text-center py-8">Loading...</TableCell>
               </TableRow>
             ) : bookings.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">No bookings found</TableCell>
+                <TableCell colSpan={isMobile ? 5 : 6} className="text-center py-8">No bookings found</TableCell>
               </TableRow>
             ) : (
               bookings.map((booking) => (
                 <TableRow key={booking.id}>
-                  <TableCell>{booking.name}</TableCell>
+                  <TableCell className="font-medium">{booking.name}</TableCell>
                   <TableCell>{formatDate(booking.booking_date)}</TableCell>
                   <TableCell>{booking.booking_time}</TableCell>
-                  <TableCell>{booking.service}</TableCell>
+                  {!isMobile && <TableCell>{booking.service}</TableCell>}
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-2">

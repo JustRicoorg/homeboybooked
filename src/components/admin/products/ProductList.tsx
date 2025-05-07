@@ -11,8 +11,14 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import ProductForm from "./ProductForm";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProductListProps {
   products: Product[];
@@ -29,14 +35,15 @@ const ProductList: React.FC<ProductListProps> = ({
 }) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleSaveEdit = () => {
     if (editingProduct) {
       onEditProduct(editingProduct, editImageFile);
       setEditingProduct(null);
       setEditImageFile(null);
-      setSheetOpen(false);
+      setDialogOpen(false);
     }
   };
 
@@ -51,13 +58,40 @@ const ProductList: React.FC<ProductListProps> = ({
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
+      {/* Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setEditingProduct(null);
+          setEditImageFile(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <div className="mt-6">
+              <ProductForm
+                product={editingProduct}
+                isEditing={true}
+                imageFile={editImageFile}
+                onProductChange={handleProductChange}
+                onImageChange={setEditImageFile}
+                onSave={handleSaveEdit}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Image</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
+            {!isMobile && <TableHead>Category</TableHead>}
             <TableHead>Price</TableHead>
             <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
@@ -65,11 +99,11 @@ const ProductList: React.FC<ProductListProps> = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8">Loading...</TableCell>
+              <TableCell colSpan={isMobile ? 4 : 5} className="text-center py-8">Loading...</TableCell>
             </TableRow>
           ) : products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8">No products found</TableCell>
+              <TableCell colSpan={isMobile ? 4 : 5} className="text-center py-8">No products found</TableCell>
             </TableRow>
           ) : (
             products.map((product) => (
@@ -87,43 +121,16 @@ const ProductList: React.FC<ProductListProps> = ({
                   </div>
                 </TableCell>
                 <TableCell>{product.name}</TableCell>
-                <TableCell className="capitalize">{product.category}</TableCell>
+                {!isMobile && <TableCell className="capitalize">{product.category}</TableCell>}
                 <TableCell>₦{product.price}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Sheet open={sheetOpen && editingProduct?.id === product.id} onOpenChange={(open) => {
-                      setSheetOpen(open);
-                      if (!open) {
-                        setEditingProduct(null);
-                        setEditImageFile(null);
-                      }
+                    <Button variant="default" onClick={() => {
+                      setEditingProduct(product);
+                      setDialogOpen(true);
                     }}>
-                      <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => {
-                          setEditingProduct(product);
-                          setSheetOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent className="overflow-y-auto">
-                        <SheetHeader>
-                          <SheetTitle>Edit Product</SheetTitle>
-                        </SheetHeader>
-                        {editingProduct && (
-                          <div className="mt-6">
-                            <ProductForm
-                              product={editingProduct}
-                              isEditing={true}
-                              imageFile={editImageFile}
-                              onProductChange={handleProductChange}
-                              onImageChange={setEditImageFile}
-                              onSave={handleSaveEdit}
-                            />
-                          </div>
-                        )}
-                      </SheetContent>
-                    </Sheet>
+                      <Edit className="h-4 w-4" />
+                    </Button>
                     <Button 
                       variant="outline" 
                       size="icon" 

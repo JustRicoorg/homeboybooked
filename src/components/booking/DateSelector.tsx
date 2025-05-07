@@ -40,6 +40,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, setSelectedDa
         })
         .map(item => item.date);
       
+      console.log('Available Sundays:', sundays);
       setAvailableSundays(sundays);
     };
     

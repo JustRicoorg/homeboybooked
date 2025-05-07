@@ -31,9 +31,11 @@ const TimeSlotForm: React.FC<TimeSlotFormProps> = ({
   const handleDateChange = (newDate: Date | undefined) => {
     setDate(newDate);
     if (newDate) {
+      // Format date without modifying day of week
+      const formattedDate = format(newDate, "yyyy-MM-dd");
       onChange({
         ...timeSlot,
-        date: format(newDate, "yyyy-MM-dd"),
+        date: formattedDate,
       });
     }
   };
@@ -61,6 +63,7 @@ const TimeSlotForm: React.FC<TimeSlotFormProps> = ({
               selected={date}
               onSelect={handleDateChange}
               initialFocus
+              className="pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
