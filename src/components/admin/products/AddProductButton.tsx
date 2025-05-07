@@ -41,7 +41,7 @@ const AddProductButton: React.FC<AddProductButtonProps> = ({
           <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-md">
+      <SheetContent side="right">
         <SheetHeader className="mb-6">
           <SheetTitle>Add New Product</SheetTitle>
         </SheetHeader>
