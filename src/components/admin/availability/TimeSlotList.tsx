@@ -88,11 +88,11 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
                         }
                       }}>
                         <SheetTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => {
+                          <Button onClick={() => {
                             onEditTimeSlot(timeSlot);
                             setSheetOpen(true);
                           }}>
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-4 w-4 mr-2" /> Edit
                           </Button>
                         </SheetTrigger>
                         <SheetContent className="overflow-y-auto">
