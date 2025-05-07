@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 type Service = {
@@ -27,7 +28,7 @@ const Services = ({
               <h3 className="text-xl font-bold mb-2 text-center">{service.name}</h3>
               <p className="text-gray-600 mb-4">{service.description}</p>
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-gray-900">${service.price}</span>
+                <span className="text-2xl font-bold text-gray-900">D{service.price}</span>
                 <Button onClick={() => onBookService(service)} variant="outline" className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white">
                   Book Now
                 </Button>

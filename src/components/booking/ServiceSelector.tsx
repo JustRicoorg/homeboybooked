@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Service } from "@/data/services";
+import { Service } from "@/types/service";
 
 interface ServiceSelectorProps {
   services: Service[];
@@ -20,7 +20,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedSer
       <option value="">Select a service</option>
       {services.map(service => (
         <option key={service.id} value={service.name}>
-          {service.name} - ${service.price}
+          {service.name} - D{service.price}
         </option>
       ))}
     </select>

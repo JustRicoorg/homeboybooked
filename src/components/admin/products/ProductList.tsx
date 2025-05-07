@@ -122,7 +122,7 @@ const ProductList: React.FC<ProductListProps> = ({
                 </TableCell>
                 <TableCell>{product.name}</TableCell>
                 {!isMobile && <TableCell className="capitalize">{product.category}</TableCell>}
-                <TableCell>₦{product.price}</TableCell>
+                <TableCell>D{product.price}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button variant="default" onClick={() => {

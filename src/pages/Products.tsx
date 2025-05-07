@@ -1,20 +1,44 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Phone } from "lucide-react";
-import { products as productData, Product } from "@/data/products";
 import { useToast } from "@/hooks/use-toast";
+import { fetchProducts } from "@/services/productApi";
+import { Product } from "@/types/product";
 
 const Products = () => {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load products. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [toast]);
 
   // Filter products based on selected category
   const filteredProducts = selectedCategory 
-    ? productData.filter(product => product.category === selectedCategory) 
-    : productData;
+    ? products.filter(product => product.category === selectedCategory) 
+    : products;
 
   const handleBuyNow = (product: Product) => {
     // Replace with actual WhatsApp number
@@ -74,36 +98,48 @@ const Products = () => {
       {/* Products Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <div key={product.id} className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white">
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={product.imageUrl} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
-                  />
+          {loading ? (
+            <div className="text-center py-10">
+              <p className="text-lg">Loading products...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.length === 0 ? (
+                <div className="col-span-full text-center py-10">
+                  <p className="text-lg">No products found in this category.</p>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
-                  <p className="text-gray-600 text-sm mb-3">{product.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold">D{product.price}</span>
-                    <Button 
-                      onClick={() => handleBuyNow(product)}
-                      className="gap-1"
-                    >
-                      <ShoppingBag size={16} />
-                      Buy Now
-                    </Button>
+              ) : (
+                filteredProducts.map((product) => (
+                  <div key={product.id} className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white">
+                    <div className="aspect-square overflow-hidden">
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
+                      <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xl font-bold">D{product.price}</span>
+                        <Button 
+                          onClick={() => handleBuyNow(product)}
+                          className="gap-1"
+                        >
+                          <ShoppingBag size={16} />
+                          Buy Now
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </section>
       

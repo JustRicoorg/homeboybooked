@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { TimeSlot } from "@/types/service";
-import { fetchTimeSlots } from "@/services/availabilityApi";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TimeSlotSelectorProps {
   selectedDate: Date | undefined;
@@ -20,14 +20,26 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ selectedDate, disab
       setLoading(true);
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        const slots = await fetchTimeSlots();
         
-        // Filter slots for the selected date and that are available
-        const filteredSlots = slots.filter(
-          slot => slot.date === formattedDate && slot.available
-        );
+        // Fetch all availability slots for the selected date
+        const { data: availabilityData, error } = await supabase
+          .from('availability')
+          .select('*')
+          .eq('date', formattedDate)
+          .eq('available', true);
         
-        setAvailableTimeSlots(filteredSlots);
+        if (error) throw error;
+        
+        // Transform from database schema to TimeSlot interface
+        const slots = (availabilityData || []).map(slot => ({
+          id: slot.id,
+          date: slot.date,
+          startTime: slot.starttime,
+          endTime: slot.endtime,
+          available: slot.available
+        }));
+        
+        setAvailableTimeSlots(slots);
       } catch (error) {
         console.error("Error fetching availability:", error);
       } finally {
@@ -75,10 +87,14 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ selectedDate, disab
     return timeSlots;
   };
 
-  // Use database slots if available, otherwise fall back to generated slots
-  const displayTimeSlots = availableTimeSlots.length > 0 
-    ? availableTimeSlots.map(formatTimeSlot)
-    : generateDefaultTimeSlots();
+  // For Sunday, only use slots from the database
+  // For other days, use database slots if available, otherwise fall back to generated slots
+  const isSunday = selectedDate ? selectedDate.getDay() === 0 : false;
+  const displayTimeSlots = isSunday
+    ? availableTimeSlots.map(formatTimeSlot) // Sunday: only use database slots
+    : availableTimeSlots.length > 0
+      ? availableTimeSlots.map(formatTimeSlot) // Other days: use database slots if available
+      : generateDefaultTimeSlots(); // Other days fallback: generate default slots
 
   return (
     <select 
@@ -91,6 +107,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ selectedDate, disab
       <option value="">
         {loading ? "Loading time slots..." : 
           !selectedDate ? "Select a date first" : 
+          displayTimeSlots.length === 0 ? "No available slots for this date" :
           "Select a time"
         }
       </option>

@@ -94,7 +94,7 @@ const ServiceList: React.FC<ServiceListProps> = ({
               <TableRow key={service.id}>
                 <TableCell>{service.name}</TableCell>
                 {!isMobile && <TableCell>{service.description}</TableCell>}
-                <TableCell>₦{service.price}</TableCell>
+                <TableCell>D{service.price}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button variant="default" onClick={() => {
