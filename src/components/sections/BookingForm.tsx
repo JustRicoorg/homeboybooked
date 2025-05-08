@@ -1,22 +1,32 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Service } from "@/data/services";
 import BookingFormFields from "../booking/BookingFormFields";
 import { submitBooking, BookingData } from "@/services/bookingService";
+
 type BookingFormProps = {
   services: Service[];
   selectedService?: string;
 };
+
 const BookingForm = ({
   services,
   selectedService
 }: BookingFormProps) => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [currentService, setCurrentService] = useState<string | undefined>(selectedService);
+  
+  // Update currentService when selectedService prop changes
+  useState(() => {
+    if (selectedService !== currentService) {
+      setCurrentService(selectedService);
+    }
+  });
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -55,6 +65,7 @@ const BookingForm = ({
       // Reset form
       form.reset();
       setSelectedDate(undefined);
+      setCurrentService(undefined);
     } catch (error) {
       console.error('Error booking appointment:', error);
 
@@ -68,7 +79,13 @@ const BookingForm = ({
       setIsSubmitting(false);
     }
   };
-  return <section id="booking" className="py-20 bg-gray-100">
+
+  const handleServiceChange = (service: string) => {
+    setCurrentService(service);
+  };
+
+  return (
+    <section id="booking" className="py-20 bg-gray-100">
       <div className="container mx-auto px-4 bg-gray-200">
         <h2 className="text-3xl font-bold mb-2 text-center text-gray-950 py-[7px]">Book an Appointment</h2>
         <p className="text-center mb-12 text-black">Schedule your next haircut with us</p>
@@ -76,7 +93,14 @@ const BookingForm = ({
         <div className="max-w-2xl mx-auto">
           <div className="p-6 md:p-8 rounded-lg bg-gray-100">
             <form onSubmit={handleBookingSubmit} className="space-y-6">
-              <BookingFormFields services={services} selectedService={selectedService} selectedDate={selectedDate} setSelectedDate={setSelectedDate} isSubmitting={isSubmitting} />
+              <BookingFormFields 
+                services={services} 
+                selectedService={currentService} 
+                selectedDate={selectedDate} 
+                setSelectedDate={setSelectedDate} 
+                isSubmitting={isSubmitting}
+                onServiceChange={handleServiceChange} 
+              />
               
               <Button type="submit" disabled={isSubmitting || !selectedDate} className="w-full bg-[#1A1F2C] text-white hover:bg-[#151a24]">
                 {isSubmitting ? "Processing..." : "Book Appointment"}
@@ -85,6 +109,8 @@ const BookingForm = ({
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default BookingForm;

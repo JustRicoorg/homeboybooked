@@ -65,3 +65,24 @@ export const submitBooking = async (bookingData: BookingData) => {
 
   return response.json();
 };
+
+export const deleteBooking = async (id: string) => {
+  try {
+    const response = await fetch(`https://qnasrupzjxawilizwelf.supabase.co/rest/v1/bookings?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuYXNydXB6anhhd2lsaXp3ZWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2ODcxMjgsImV4cCI6MjA2MTI2MzEyOH0.kOZ0OHI-OBoo_PQ8o3KUU9T-z9YI42raUHZqnvXwAWY',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete booking');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    throw error;
+  }
+};

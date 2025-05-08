@@ -6,9 +6,15 @@ interface ServiceSelectorProps {
   services: Service[];
   selectedService?: string;
   disabled?: boolean;
+  onChange?: (value: string) => void;
 }
 
-const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedService, disabled }) => {
+const ServiceSelector: React.FC<ServiceSelectorProps> = ({ 
+  services, 
+  selectedService, 
+  disabled,
+  onChange 
+}) => {
   return (
     <select 
       id="service" 
@@ -16,6 +22,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedSer
       required
       defaultValue={selectedService || ""}
       disabled={disabled}
+      onChange={(e) => onChange && onChange(e.target.value)}
     >
       <option value="">Select a service</option>
       {services.map(service => (

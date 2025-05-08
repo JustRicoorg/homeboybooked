@@ -31,7 +31,7 @@ const TimeSlotForm: React.FC<TimeSlotFormProps> = ({
   const handleDateChange = (newDate: Date | undefined) => {
     setDate(newDate);
     if (newDate) {
-      // Format date without modifying the day, preserve the exact selected date
+      // Format date as yyyy-MM-dd without timezone conversion
       const formattedDate = format(newDate, "yyyy-MM-dd");
       onChange({
         ...timeSlot,

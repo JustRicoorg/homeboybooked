@@ -11,7 +11,15 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Eye, Filter, RefreshCw } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Calendar, Check, Filter, RefreshCw, Trash, X } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +45,11 @@ const AdminSchedule = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [confirmDialog, setConfirmDialog] = useState<{open: boolean, id: string, action: 'complete' | 'cancel' | null}>({
+    open: false,
+    id: '',
+    action: null
+  });
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -74,19 +87,47 @@ const AdminSchedule = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const handleStatusChange = (id: string, status: string) => {
+    if (status === 'completed' || status === 'cancelled') {
+      setConfirmDialog({
+        open: true,
+        id,
+        action: status === 'completed' ? 'complete' : 'cancel'
+      });
+    } else {
+      updateBookingStatus(id, status);
+    }
+  };
+
   const updateBookingStatus = async (id: string, status: string) => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Status updated",
-        description: `Booking status changed to ${status}`
-      });
+      if (status === 'completed' || status === 'cancelled') {
+        // Delete from the bookings table
+        const { error: deleteError } = await supabase
+          .from('bookings')
+          .delete()
+          .eq('id', id);
+          
+        if (deleteError) throw deleteError;
+        
+        toast({
+          title: status === 'completed' ? "Appointment Completed" : "Appointment Cancelled",
+          description: `The appointment has been ${status === 'completed' ? 'completed' : 'cancelled'} and removed from the schedule`
+        });
+      } else {
+        // Just update the status
+        const { error } = await supabase
+          .from('bookings')
+          .update({ status })
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Status updated",
+          description: `Booking status changed to ${status}`
+        });
+      }
       
       fetchBookings();
     } catch (error: any) {
@@ -95,6 +136,8 @@ const AdminSchedule = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setConfirmDialog({ open: false, id: '', action: null });
     }
   };
 
@@ -173,21 +216,32 @@ const AdminSchedule = () => {
                   <TableCell>{getStatusBadge(booking.status)}</TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                          onClick={() => handleStatusChange(booking.id, 'completed')}
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Complete
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+                          onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                      </div>
                       <select
-                        className="text-sm border rounded p-1"
+                        className="text-sm border rounded p-1 mt-2"
                         value={booking.status}
                         onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
                       >
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="completed">Completed</option>
                       </select>
-                      
-                      <Button variant="link" size="sm" className="h-auto p-0">
-                        <Eye className="h-3 w-3 mr-1" /> 
-                        View details
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -196,6 +250,47 @@ const AdminSchedule = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog 
+        open={confirmDialog.open} 
+        onOpenChange={(open) => {
+          if (!open) setConfirmDialog({...confirmDialog, open: false});
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {confirmDialog.action === 'complete' ? 'Complete Appointment' : 'Cancel Appointment'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmDialog.action === 'complete' 
+                ? 'Are you sure you want to mark this appointment as completed? This will remove it from the schedule.'
+                : 'Are you sure you want to cancel this appointment? This will remove it from the schedule.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDialog({open: false, id: '', action: null})}
+            >
+              No, keep it
+            </Button>
+            <Button
+              variant={confirmDialog.action === 'complete' ? 'default' : 'destructive'}
+              onClick={() => {
+                if (confirmDialog.id && confirmDialog.action) {
+                  updateBookingStatus(
+                    confirmDialog.id, 
+                    confirmDialog.action === 'complete' ? 'completed' : 'cancelled'
+                  );
+                }
+              }}
+            >
+              Yes, {confirmDialog.action === 'complete' ? 'complete it' : 'cancel it'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

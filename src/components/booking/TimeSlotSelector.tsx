@@ -7,11 +7,17 @@ import { supabase } from "@/integrations/supabase/client";
 interface TimeSlotSelectorProps {
   selectedDate: Date | undefined;
   disabled?: boolean;
+  onChange?: (value: string) => void;
 }
 
-const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ selectedDate, disabled }) => {
+const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ 
+  selectedDate, 
+  disabled,
+  onChange
+}) => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   useEffect(() => {
     const getAvailability = async () => {
@@ -40,6 +46,17 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ selectedDate, disab
         }));
         
         setAvailableTimeSlots(slots);
+
+        // Also fetch already booked slots for this date to prevent double booking
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('booking_time')
+          .eq('booking_date', formattedDate)
+          .neq('status', 'cancelled');
+        
+        if (bookingsError) throw bookingsError;
+        
+        setBookedSlots((bookingsData || []).map(booking => booking.booking_time));
       } catch (error) {
         console.error("Error fetching availability:", error);
       } finally {
@@ -95,23 +112,27 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({ selectedDate, disab
     : availableTimeSlots.length > 0
       ? availableTimeSlots.map(formatTimeSlot) // Other days: use database slots if available
       : generateDefaultTimeSlots(); // Other days fallback: generate default slots
+  
+  // Filter out already booked slots
+  const availableDisplayTimeSlots = displayTimeSlots.filter(slot => !bookedSlots.includes(slot));
 
   return (
     <select 
       id="time" 
       name="booking_time"
-      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2" 
+      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed" 
       required
       disabled={!selectedDate || disabled || loading}
+      onChange={(e) => onChange && onChange(e.target.value)}
     >
       <option value="">
         {loading ? "Loading time slots..." : 
           !selectedDate ? "Select a date first" : 
-          displayTimeSlots.length === 0 ? "No available slots for this date" :
+          availableDisplayTimeSlots.length === 0 ? "No available slots for this date" :
           "Select a time"
         }
       </option>
-      {displayTimeSlots.map((time, index) => 
+      {availableDisplayTimeSlots.map((time, index) => 
         <option key={index} value={time}>{time}</option>
       )}
     </select>

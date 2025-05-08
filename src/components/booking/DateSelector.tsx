@@ -18,30 +18,38 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, setSelectedDa
   const today = startOfToday();
   const endOfCurrentMonth = endOfMonth(today);
   const [availableSundays, setAvailableSundays] = useState<string[]>([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
   
   // Load available Sundays from the availability table
   useEffect(() => {
     const fetchAvailableSundays = async () => {
-      const { data, error } = await supabase
-        .from('availability')
-        .select('date')
-        .eq('available', true);
-      
-      if (error) {
-        console.error('Error fetching available Sundays:', error);
-        return;
+      setLoadingAvailability(true);
+      try {
+        const { data, error } = await supabase
+          .from('availability')
+          .select('date')
+          .eq('available', true);
+        
+        if (error) {
+          console.error('Error fetching available Sundays:', error);
+          return;
+        }
+        
+        // Filter to only include Sundays
+        const sundays = data
+          .filter(item => {
+            const date = new Date(item.date);
+            return date.getDay() === 0; // Sunday is 0
+          })
+          .map(item => item.date);
+        
+        console.log('Available Sundays:', sundays);
+        setAvailableSundays(sundays);
+      } catch (error) {
+        console.error('Error in fetchAvailableSundays:', error);
+      } finally {
+        setLoadingAvailability(false);
       }
-      
-      // Filter to only include Sundays
-      const sundays = data
-        .filter(item => {
-          const date = new Date(item.date);
-          return date.getDay() === 0; // Sunday is 0
-        })
-        .map(item => item.date);
-      
-      console.log('Available Sundays:', sundays);
-      setAvailableSundays(sundays);
     };
     
     fetchAvailableSundays();
@@ -82,11 +90,17 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, setSelectedDa
         <PopoverTrigger asChild>
           <button
             type="button"
-            disabled={disabled}
+            disabled={disabled || loadingAvailability}
             className="flex items-center w-full h-10 rounded-md border border-gray-300 bg-white pl-3 pr-3 py-2 text-left text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
-            {selectedDate ? format(selectedDate, 'PPP') : <span className="text-gray-400">Select a date</span>}
+            {loadingAvailability ? (
+              <span className="text-gray-400">Loading availability...</span>
+            ) : selectedDate ? (
+              format(selectedDate, 'PPP')
+            ) : (
+              <span className="text-gray-400">Select a date</span>
+            )}
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
