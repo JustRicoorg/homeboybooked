@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
-import { CalendarIcon, Check, X } from "lucide-react";
+import { CalendarIcon, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -73,19 +73,20 @@ const AdminSchedule = () => {
     setFilteredBookings(filtered);
   };
 
-  const handleStatusChange = async (id: string, status: 'completed' | 'cancelled') => {
+  const handleCompleteAppointment = async (id: string) => {
     try {
-      await updateBookingStatus(id, status);
+      await updateBookingStatus(id, 'completed');
       
       toast({
-        title: `Appointment ${status}`,
-        description: `The appointment has been marked as ${status}.`
+        title: "Appointment Completed",
+        description: "The appointment has been marked as completed and moved to client history."
       });
       
-      fetchBookings();
+      // Remove from current bookings list
+      setBookings(prev => prev.filter(booking => booking.id !== id));
     } catch (error: any) {
       toast({
-        title: "Error updating appointment",
+        title: "Error completing appointment",
         description: error.message,
         variant: "destructive",
       });
@@ -183,21 +184,13 @@ const AdminSchedule = () => {
                     {getStatusBadge(booking.status)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
+                    <div className="flex justify-end">
                       <Button 
                         size="sm" 
-                        onClick={() => handleStatusChange(booking.id, 'completed')}
+                        onClick={() => handleCompleteAppointment(booking.id)}
                         className="bg-green-600 hover:bg-green-700"
                       >
                         <Check className="h-4 w-4 mr-1" /> Complete
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="border-red-300 text-red-600 hover:bg-red-50"
-                        onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                      >
-                        <X className="h-4 w-4 mr-1" /> Cancel
                       </Button>
                     </div>
                   </TableCell>

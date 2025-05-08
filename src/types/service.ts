@@ -29,3 +29,9 @@ export interface BookingSlot {
   time: string;
   available: boolean;
 }
+
+export interface RescheduleParams {
+  id: string;
+  email: string;
+  name: string;
+}

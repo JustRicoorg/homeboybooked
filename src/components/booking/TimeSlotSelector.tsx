@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { format, addMinutes, parseISO } from "date-fns";
 import { TimeSlot, RecurringSchedule, BookingSlot } from "@/types/service";
 import { supabase } from "@/integrations/supabase/client";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TimeSlotSelectorProps {
   selectedDate: Date | undefined;
@@ -20,6 +21,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   const [loading, setLoading] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>([]);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   useEffect(() => {
     const getAvailability = async () => {
@@ -187,26 +189,72 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     return date;
   };
 
+  const handleTimeSelect = (time: string) => {
+    setSelectedTime(time);
+    if (onChange) {
+      onChange(time);
+    }
+  };
+
+  if (!selectedDate) {
+    return <div className="text-center text-gray-500">Please select a date first</div>;
+  }
+
+  if (loading) {
+    return <div className="text-center text-gray-500">Loading available time slots...</div>;
+  }
+
+  if (bookingSlots.length === 0) {
+    return <div className="text-center text-gray-500">No available slots for this date</div>;
+  }
+
+  const formattedDay = format(selectedDate, "EEEE, MMMM dd");
+
   return (
-    <select 
-      id="time" 
-      name="booking_time"
-      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1F2C] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed" 
-      required
-      disabled={!selectedDate || disabled || loading}
-      onChange={(e) => onChange && onChange(e.target.value)}
-    >
-      <option value="">
-        {loading ? "Loading time slots..." : 
-          !selectedDate ? "Select a date first" : 
-          bookingSlots.length === 0 ? "No available slots for this date" :
-          "Select a time"
-        }
-      </option>
-      {bookingSlots.map((slot, index) => 
-        <option key={index} value={slot.time}>{slot.time}</option>
-      )}
-    </select>
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-4">
+        <button className="text-[#1A1F2C] hover:text-[#6E59A5]" onClick={() => {/* Previous day navigation */}}>
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <h3 className="text-lg font-medium text-[#1A1F2C]">{formattedDay}</h3>
+        <button className="text-[#1A1F2C] hover:text-[#6E59A5]" onClick={() => {/* Next day navigation */}}>
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-2 mt-4">
+        {bookingSlots.map((slot, index) => (
+          <button
+            key={index}
+            className={`rounded-md border py-3 px-4 transition-colors ${
+              selectedTime === slot.time 
+                ? 'bg-[#1A1F2C] text-white border-[#1A1F2C]' 
+                : 'bg-white text-[#1A1F2C] border-gray-300 hover:border-[#1A1F2C]'
+            }`}
+            onClick={() => handleTimeSelect(slot.time)}
+            disabled={disabled || !slot.available}
+          >
+            {slot.time}
+          </button>
+        ))}
+      </div>
+
+      {/* Hidden select for form submission compatibility */}
+      <select 
+        id="time" 
+        name="booking_time"
+        className="sr-only"
+        required
+        disabled={!selectedDate || disabled || loading}
+        value={selectedTime || ''}
+        onChange={(e) => handleTimeSelect(e.target.value)}
+      >
+        <option value="">Select a time</option>
+        {bookingSlots.map((slot, index) => (
+          <option key={index} value={slot.time}>{slot.time}</option>
+        ))}
+      </select>
+    </div>
   );
 };
 

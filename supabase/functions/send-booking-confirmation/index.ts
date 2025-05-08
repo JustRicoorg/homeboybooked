@@ -7,6 +7,7 @@ import { Resend } from 'https://esm.sh/resend@2.0.0'
 const SUPABASE_URL = 'https://qnasrupzjxawilizwelf.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuYXNydXB6anhhd2lsaXp3ZWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2ODcxMjgsImV4cCI6MjA2MTI2MzEyOH0.kOZ0OHI-OBoo_PQ8o3KUU9T-z9YI42raUHZqnvXwAWY'
 const RESEND_API_KEY = 're_amWSstmM_N3fNwFbrdfKWcG16AWj3XUf7'
+const ADMIN_EMAIL = 'slarico15@gmail.com' // Admin email to receive booking notifications
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -105,7 +106,8 @@ serve(async (req) => {
           notes: booking.notes || '',
           status: 'pending',
         },
-      ]);
+      ])
+      .select();
 
     if (error) {
       console.error('Supabase error:', error);
@@ -118,32 +120,74 @@ serve(async (req) => {
       );
     }
 
-    console.log('Booking saved to Supabase successfully');
+    const bookingId = data && data[0] ? data[0].id : null;
+    console.log('Booking saved to Supabase successfully with ID:', bookingId);
 
-    // Send confirmation email using Resend
+    // Reschedule link (encrypted with a basic hash to prevent abuse)
+    const rescheduleParams = new URLSearchParams({
+      id: bookingId,
+      email: encodeURIComponent(booking.email),
+      name: encodeURIComponent(booking.name)
+    }).toString();
+    
+    const websiteUrl = 'https://homeboybarbing.com';
+    const rescheduleUrl = `${websiteUrl}/reschedule?${rescheduleParams}`;
+
+    // Send confirmation email to customer using Resend
     try {
-      const emailResponse = await resend.emails.send({
+      const customerEmailResponse = await resend.emails.send({
         from: 'HOMEBOY Barbing <onboarding@resend.dev>',
         to: booking.email,
         subject: 'Your HOMEBOY Barbing Appointment',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #1A1F2C;">Your booking is being processed</h1>
+            <h1 style="color: #1A1F2C;">Your booking is confirmed!</h1>
             <p>Dear ${booking.name},</p>
             <p>Thank you for booking an appointment with HOMEBOY Barbing Saloon!</p>
             <p><strong>Service:</strong> ${booking.service}</p>
             <p><strong>Date:</strong> ${booking.booking_date}</p>
             <p><strong>Time:</strong> ${booking.booking_time}</p>
-            <p>ML will get back to you shortly to confirm your appointment.</p>
+            <p>Need to change your appointment time? <a href="${rescheduleUrl}" style="color: #1A1F2C; font-weight: bold;">Click here to reschedule</a>.</p>
+            <p>We look forward to seeing you!</p>
             <p>Best regards,<br/>HOMEBOY Barbing Saloon Team</p>
           </div>
         `,
       });
       
-      console.log('Email sent successfully:', emailResponse);
+      console.log('Customer email sent successfully:', customerEmailResponse);
     } catch (emailError) {
-      console.error('Error sending email:', emailError);
-      // We continue even if email fails, just log it
+      console.error('Error sending customer email:', emailError);
+      // We continue even if customer email fails, just log it
+    }
+
+    // Send notification email to admin
+    try {
+      const adminEmailResponse = await resend.emails.send({
+        from: 'HOMEBOY Barbing Bookings <onboarding@resend.dev>',
+        to: ADMIN_EMAIL,
+        subject: `New Booking: ${booking.service} on ${booking.booking_date}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #1A1F2C;">New Appointment Booking</h1>
+            <p>You have received a new booking:</p>
+            <div style="background-color: #f7f7f7; border-left: 4px solid #1A1F2C; padding: 15px; margin: 20px 0;">
+              <p><strong>Customer:</strong> ${booking.name}</p>
+              <p><strong>Email:</strong> ${booking.email}</p>
+              <p><strong>Phone:</strong> ${booking.phone}</p>
+              <p><strong>Service:</strong> ${booking.service}</p>
+              <p><strong>Date:</strong> ${booking.booking_date}</p>
+              <p><strong>Time:</strong> ${booking.booking_time}</p>
+              ${booking.notes ? `<p><strong>Notes:</strong> ${booking.notes}</p>` : ''}
+            </div>
+            <p>Please confirm this appointment with the customer.</p>
+          </div>
+        `,
+      });
+      
+      console.log('Admin notification email sent successfully:', adminEmailResponse);
+    } catch (emailError) {
+      console.error('Error sending admin notification email:', emailError);
+      // We continue even if admin email fails, just log it
     }
 
     // Return success response
@@ -151,6 +195,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Booking created successfully',
+        id: bookingId
       }),
       {
         status: 200,

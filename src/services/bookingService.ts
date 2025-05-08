@@ -120,8 +120,8 @@ export const updateBookingStatus = async (id: string, status: 'pending' | 'confi
     
     const data = await response.json();
     
-    // If status is completed or cancelled, we should also create a record in the client table before deleting
-    if (status === 'completed' || status === 'cancelled') {
+    // If status is completed, we should create a record in the client table before deleting
+    if (status === 'completed') {
       // First get the full booking details
       const bookingResponse = await fetch(`https://qnasrupzjxawilizwelf.supabase.co/rest/v1/bookings?id=eq.${id}`, {
         headers: {
@@ -168,6 +168,47 @@ export const updateBookingStatus = async (id: string, status: 'pending' | 'confi
     return data;
   } catch (error) {
     console.error('Error updating booking status:', error);
+    throw error;
+  }
+};
+
+export const rescheduleBooking = async (id: string, newDate: string, newTime: string) => {
+  try {
+    // First check if the new slot is available
+    const checkExistingResponse = await fetch(`https://qnasrupzjxawilizwelf.supabase.co/rest/v1/bookings?booking_date=eq.${newDate}&booking_time=eq.${newTime}&status=neq.cancelled`, {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuYXNydXB6anhhd2lsaXp3ZWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2ODcxMjgsImV4cCI6MjA2MTI2MzEyOH0.kOZ0OHI-OBoo_PQ8o3KUU9T-z9YI42raUHZqnvXwAWY',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const existingBookings = await checkExistingResponse.json();
+    
+    if (existingBookings && existingBookings.length > 0) {
+      throw new Error("This time slot is already booked. Please select a different time.");
+    }
+    
+    // Update the booking with the new date and time
+    const response = await fetch(`https://qnasrupzjxawilizwelf.supabase.co/rest/v1/bookings?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuYXNydXB6anhhd2lsaXp3ZWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2ODcxMjgsImV4cCI6MjA2MTI2MzEyOH0.kOZ0OHI-OBoo_PQ8o3KUU9T-z9YI42raUHZqnvXwAWY',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        booking_date: newDate,
+        booking_time: newTime
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to reschedule booking');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error rescheduling booking:', error);
     throw error;
   }
 };
