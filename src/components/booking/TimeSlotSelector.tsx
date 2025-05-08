@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
-import { format } from "date-fns";
-import { TimeSlot } from "@/types/service";
+import { format, addMinutes, parseISO } from "date-fns";
+import { TimeSlot, RecurringSchedule, BookingSlot } from "@/types/service";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TimeSlotSelectorProps {
@@ -16,8 +16,10 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   onChange
 }) => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+  const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>([]);
   const [loading, setLoading] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>([]);
 
   useEffect(() => {
     const getAvailability = async () => {
@@ -26,26 +28,50 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       setLoading(true);
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
+        const dayOfWeek = selectedDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
         
         // Fetch all availability slots for the selected date
         const { data: availabilityData, error } = await supabase
           .from('availability')
           .select('*')
-          .eq('date', formattedDate)
-          .eq('available', true);
+          .eq('date', formattedDate);
         
         if (error) throw error;
         
         // Transform from database schema to TimeSlot interface
-        const slots = (availabilityData || []).map(slot => ({
+        const specificDaySlots = (availabilityData || []).map(slot => ({
           id: slot.id,
           date: slot.date,
           startTime: slot.starttime,
           endTime: slot.endtime,
-          available: slot.available
+          available: slot.available,
+          slotInterval: slot.slot_interval || 30,
+          isSpecialDay: slot.is_special_day || false,
+          specialDayName: slot.special_day_name
         }));
         
-        setAvailableTimeSlots(slots);
+        setAvailableTimeSlots(specificDaySlots);
+        
+        // If no specific day availability, fetch recurring schedule for this day of week
+        if (specificDaySlots.length === 0) {
+          const { data: recurringData, error: recurringError } = await supabase
+            .from('recurring_availability')
+            .select('*')
+            .eq('day_of_week', dayOfWeek)
+            .eq('available', true);
+            
+          if (recurringError) throw recurringError;
+          
+          const recurringSlots = (recurringData || []).map(slot => ({
+            id: slot.id,
+            dayOfWeek: slot.day_of_week,
+            startTime: slot.start_time,
+            endTime: slot.end_time,
+            available: slot.available
+          }));
+          
+          setRecurringSchedules(recurringSlots);
+        }
 
         // Also fetch already booked slots for this date to prevent double booking
         const { data: bookingsData, error: bookingsError } = await supabase
@@ -66,55 +92,100 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     
     getAvailability();
   }, [selectedDate]);
-
-  // Generate formatted time slots for display
-  const formatTimeSlot = (timeSlot: TimeSlot) => {
-    // Format the time for display (e.g., "09:00 AM")
-    const formatTime = (timeStr: string) => {
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      const period = hours >= 12 ? 'PM' : 'AM';
-      const hour = hours % 12 || 12; // Convert to 12-hour format
-      return `${hour}:${minutes.toString().padStart(2, '0')} ${period}`;
-    };
-    
-    const startFormatted = formatTime(timeSlot.startTime);
-    const endFormatted = formatTime(timeSlot.endTime);
-    
-    return `${startFormatted} - ${endFormatted}`;
-  };
-
-  // Fallback to generate time slots if none are in the database
-  const generateDefaultTimeSlots = () => {
-    const timeSlots = [];
-    const currentDate = new Date();
-    const isToday = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd');
-    
-    const startHour = isToday ? currentDate.getHours() + 1 : 9; // If today, start from next hour
-    const endHour = 19; // End at 7 PM
-    
-    for (let hour = Math.max(9, startHour); hour < endHour; hour++) {
-      const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-      const ampm = hour < 12 ? 'AM' : 'PM';
-      timeSlots.push(`${formattedHour}:00 ${ampm}`);
-      if (hour < endHour - 1) { // Don't add 30 min for the last hour
-        timeSlots.push(`${formattedHour}:30 ${ampm}`);
-      }
+  
+  // Generate time slots based on availability data
+  useEffect(() => {
+    if (!selectedDate) {
+      setBookingSlots([]);
+      return;
     }
     
-    return timeSlots;
-  };
-
-  // For Sunday, only use slots from the database
-  // For other days, use database slots if available, otherwise fall back to generated slots
-  const isSunday = selectedDate ? selectedDate.getDay() === 0 : false;
-  const displayTimeSlots = isSunday
-    ? availableTimeSlots.map(formatTimeSlot) // Sunday: only use database slots
-    : availableTimeSlots.length > 0
-      ? availableTimeSlots.map(formatTimeSlot) // Other days: use database slots if available
-      : generateDefaultTimeSlots(); // Other days fallback: generate default slots
+    try {
+      const slots: BookingSlot[] = [];
+      const dayOfWeek = selectedDate.getDay();
+      
+      // Case 1: Using specific day availability
+      if (availableTimeSlots.length > 0) {
+        availableTimeSlots.forEach(timeSlot => {
+          if (timeSlot.available) {
+            const slotInterval = timeSlot.slotInterval || 30;
+            const startTime = parseTimeString(timeSlot.startTime);
+            const endTime = parseTimeString(timeSlot.endTime);
+            
+            // Generate time slots at specified intervals
+            let currentTime = startTime;
+            while (currentTime < endTime) {
+              const slotTime = format(currentTime, "h:mm a");
+              slots.push({
+                time: slotTime,
+                available: true
+              });
+              currentTime = addMinutes(currentTime, slotInterval);
+            }
+          }
+        });
+      } 
+      // Case 2: Using recurring schedule for this day of week
+      else if (recurringSchedules.length > 0) {
+        recurringSchedules.forEach(schedule => {
+          if (schedule.dayOfWeek === dayOfWeek && schedule.available) {
+            const startTime = parseTimeString(schedule.startTime);
+            const endTime = parseTimeString(schedule.endTime);
+            const slotInterval = 30; // Default interval for recurring schedules
+            
+            // Generate time slots at specified intervals
+            let currentTime = startTime;
+            while (currentTime < endTime) {
+              const slotTime = format(currentTime, "h:mm a");
+              slots.push({
+                time: slotTime,
+                available: true
+              });
+              currentTime = addMinutes(currentTime, slotInterval);
+            }
+          }
+        });
+      } 
+      // Case 3: Default business hours for Mon-Sat (9AM-5PM, if no specific settings)
+      else if (dayOfWeek !== 0) { // Not Sunday
+        // Default business hours
+        const startTime = new Date();
+        startTime.setHours(9, 0, 0);
+        
+        const endTime = new Date();
+        endTime.setHours(17, 0, 0);
+        
+        // Generate time slots
+        let currentTime = startTime;
+        while (currentTime < endTime) {
+          const slotTime = format(currentTime, "h:mm a");
+          slots.push({
+            time: slotTime,
+            available: true
+          });
+          currentTime = addMinutes(currentTime, 30); // Default 30-minute intervals
+        }
+      }
+      
+      // Filter out already booked slots
+      const filteredSlots = slots.filter(slot => !bookedSlots.includes(slot.time));
+      setBookingSlots(filteredSlots);
+    } catch (error) {
+      console.error("Error generating time slots:", error);
+      setBookingSlots([]);
+    }
+  }, [selectedDate, availableTimeSlots, recurringSchedules, bookedSlots]);
   
-  // Filter out already booked slots
-  const availableDisplayTimeSlots = displayTimeSlots.filter(slot => !bookedSlots.includes(slot));
+  // Helper to parse time strings like "09:00" into Date objects
+  const parseTimeString = (timeStr: string): Date => {
+    const today = new Date();
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    
+    return date;
+  };
 
   return (
     <select 
@@ -128,12 +199,12 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       <option value="">
         {loading ? "Loading time slots..." : 
           !selectedDate ? "Select a date first" : 
-          availableDisplayTimeSlots.length === 0 ? "No available slots for this date" :
+          bookingSlots.length === 0 ? "No available slots for this date" :
           "Select a time"
         }
       </option>
-      {availableDisplayTimeSlots.map((time, index) => 
-        <option key={index} value={time}>{time}</option>
+      {bookingSlots.map((slot, index) => 
+        <option key={index} value={slot.time}>{slot.time}</option>
       )}
     </select>
   );

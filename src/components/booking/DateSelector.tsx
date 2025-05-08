@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format, isBefore, isAfter, isSunday, startOfToday, endOfMonth, addDays } from "date-fns";
+import { format, isBefore, isAfter, startOfToday, endOfMonth, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,42 +17,58 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, setSelectedDa
   // Date range limits
   const today = startOfToday();
   const endOfCurrentMonth = endOfMonth(today);
-  const [availableSundays, setAvailableSundays] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<Record<string, boolean>>({});
+  const [recurringSchedules, setRecurringSchedules] = useState<Record<number, boolean>>({});
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   
-  // Load available Sundays from the availability table
+  // Load available dates and recurring schedules
   useEffect(() => {
-    const fetchAvailableSundays = async () => {
+    const fetchAvailability = async () => {
       setLoadingAvailability(true);
       try {
-        const { data, error } = await supabase
+        // Fetch specific day availability
+        const { data: availabilityData, error } = await supabase
           .from('availability')
-          .select('date')
-          .eq('available', true);
+          .select('date, available');
         
         if (error) {
-          console.error('Error fetching available Sundays:', error);
+          console.error('Error fetching availability:', error);
           return;
         }
         
-        // Filter to only include Sundays
-        const sundays = data
-          .filter(item => {
-            const date = new Date(item.date);
-            return date.getDay() === 0; // Sunday is 0
-          })
-          .map(item => item.date);
+        // Create an object mapping dates to their availability status
+        const dateAvailability = availabilityData.reduce((acc, item) => {
+          acc[item.date] = item.available;
+          return acc;
+        }, {} as Record<string, boolean>);
         
-        console.log('Available Sundays:', sundays);
-        setAvailableSundays(sundays);
+        setAvailableDates(dateAvailability);
+        
+        // Fetch recurring schedules
+        const { data: recurringData, error: recurringError } = await supabase
+          .from('recurring_availability')
+          .select('day_of_week, available');
+        
+        if (recurringError) {
+          console.error('Error fetching recurring schedules:', recurringError);
+          return;
+        }
+        
+        // Create an object mapping days of week to their availability status
+        const weeklyAvailability = recurringData.reduce((acc, item) => {
+          acc[item.day_of_week] = item.available;
+          return acc;
+        }, {} as Record<number, boolean>);
+        
+        setRecurringSchedules(weeklyAvailability);
       } catch (error) {
-        console.error('Error in fetchAvailableSundays:', error);
+        console.error('Error in fetchAvailability:', error);
       } finally {
         setLoadingAvailability(false);
       }
     };
     
-    fetchAvailableSundays();
+    fetchAvailability();
   }, []);
   
   // Allow booking in the next month if we're in the last week of current month
@@ -68,14 +84,21 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, setSelectedDa
     // Always disable dates after booking end date
     if (isAfter(date, bookingEndDate)) return true;
     
-    // Disable Sundays unless they are in the availableSundays list
-    if (isSunday(date)) {
-      const dateString = format(date, 'yyyy-MM-dd');
-      return !availableSundays.includes(dateString);
+    const dateString = format(date, 'yyyy-MM-dd');
+    const dayOfWeek = date.getDay(); // 0 is Sunday, 1 is Monday, etc.
+    
+    // Check if this date has a specific availability set
+    if (dateString in availableDates) {
+      return !availableDates[dateString]; // Disable if not available
     }
     
-    // All other days are enabled
-    return false;
+    // If no specific availability, check the recurring schedule for this day of week
+    if (dayOfWeek in recurringSchedules) {
+      return !recurringSchedules[dayOfWeek]; // Disable if not available
+    }
+    
+    // Default business days (Mon-Sat) are available, Sunday is unavailable
+    return dayOfWeek === 0; // Disable Sundays by default
   };
 
   return (

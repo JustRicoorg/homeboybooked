@@ -16,6 +16,9 @@ export type Database = {
           date: string
           endtime: string
           id: number
+          is_special_day: boolean
+          slot_interval: number
+          special_day_name: string | null
           starttime: string
         }
         Insert: {
@@ -24,6 +27,9 @@ export type Database = {
           date: string
           endtime: string
           id?: number
+          is_special_day?: boolean
+          slot_interval?: number
+          special_day_name?: string | null
           starttime: string
         }
         Update: {
@@ -32,6 +38,9 @@ export type Database = {
           date?: string
           endtime?: string
           id?: number
+          is_special_day?: boolean
+          slot_interval?: number
+          special_day_name?: string | null
           starttime?: string
         }
         Relationships: []
@@ -153,6 +162,33 @@ export type Database = {
           image_url?: string
           name?: string
           price?: number
+        }
+        Relationships: []
+      }
+      recurring_availability: {
+        Row: {
+          available: boolean
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: number
+          start_time: string
+        }
+        Insert: {
+          available?: boolean
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: number
+          start_time: string
+        }
+        Update: {
+          available?: boolean
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: number
+          start_time?: string
         }
         Relationships: []
       }
