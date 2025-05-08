@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { format, addMinutes, parseISO } from "date-fns";
+import { format, addMinutes, parseISO, isSameDay, isAfter } from "date-fns";
 import { TimeSlot, RecurringSchedule, BookingSlot } from "@/types/service";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -47,7 +47,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           startTime: slot.starttime,
           endTime: slot.endtime,
           available: slot.available,
-          slotInterval: slot.slot_interval || 30,
+          slotInterval: slot.slot_interval || 45, // Default to 45 minutes now
           isSpecialDay: slot.is_special_day || false,
           specialDayName: slot.special_day_name
         }));
@@ -105,23 +105,28 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     try {
       const slots: BookingSlot[] = [];
       const dayOfWeek = selectedDate.getDay();
+      const now = new Date();
+      const isToday = isSameDay(selectedDate, now);
       
       // Case 1: Using specific day availability
       if (availableTimeSlots.length > 0) {
         availableTimeSlots.forEach(timeSlot => {
           if (timeSlot.available) {
-            const slotInterval = timeSlot.slotInterval || 30;
+            const slotInterval = timeSlot.slotInterval || 45; // Default to 45 minutes
             const startTime = parseTimeString(timeSlot.startTime);
             const endTime = parseTimeString(timeSlot.endTime);
             
             // Generate time slots at specified intervals
             let currentTime = startTime;
             while (currentTime < endTime) {
-              const slotTime = format(currentTime, "h:mm a");
-              slots.push({
-                time: slotTime,
-                available: true
-              });
+              // For today, only show future time slots
+              if (!isToday || isAfter(currentTime, now)) {
+                const slotTime = format(currentTime, "h:mm a");
+                slots.push({
+                  time: slotTime,
+                  available: true
+                });
+              }
               currentTime = addMinutes(currentTime, slotInterval);
             }
           }
@@ -133,16 +138,19 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           if (schedule.dayOfWeek === dayOfWeek && schedule.available) {
             const startTime = parseTimeString(schedule.startTime);
             const endTime = parseTimeString(schedule.endTime);
-            const slotInterval = 30; // Default interval for recurring schedules
+            const slotInterval = 45; // Changed from 30 to 45 minutes
             
             // Generate time slots at specified intervals
             let currentTime = startTime;
             while (currentTime < endTime) {
-              const slotTime = format(currentTime, "h:mm a");
-              slots.push({
-                time: slotTime,
-                available: true
-              });
+              // For today, only show future time slots
+              if (!isToday || isAfter(currentTime, now)) {
+                const slotTime = format(currentTime, "h:mm a");
+                slots.push({
+                  time: slotTime,
+                  available: true
+                });
+              }
               currentTime = addMinutes(currentTime, slotInterval);
             }
           }
@@ -160,12 +168,15 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         // Generate time slots
         let currentTime = startTime;
         while (currentTime < endTime) {
-          const slotTime = format(currentTime, "h:mm a");
-          slots.push({
-            time: slotTime,
-            available: true
-          });
-          currentTime = addMinutes(currentTime, 30); // Default 30-minute intervals
+          // For today, only show future time slots
+          if (!isToday || isAfter(currentTime, now)) {
+            const slotTime = format(currentTime, "h:mm a");
+            slots.push({
+              time: slotTime,
+              available: true
+            });
+          }
+          currentTime = addMinutes(currentTime, 45); // Changed from 30 to 45 minutes
         }
       }
       
@@ -180,10 +191,10 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   
   // Helper to parse time strings like "09:00" into Date objects
   const parseTimeString = (timeStr: string): Date => {
-    const today = new Date();
+    // Create a date object with the selected date's year, month, and day
+    const date = selectedDate ? new Date(selectedDate) : new Date();
     const [hours, minutes] = timeStr.split(':').map(Number);
     
-    const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     
     return date;
@@ -229,7 +240,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
             className={`rounded-md border py-3 px-4 transition-colors ${
               selectedTime === slot.time 
                 ? 'bg-[#1A1F2C] text-white border-[#1A1F2C]' 
-                : 'bg-white text-[#1A1F2C] border-gray-300 hover:border-[#1A1F2C]'
+                : 'bg-white text-[#1A1F2C] border-[#D1D5DB] hover:border-[#1A1F2C]'
             }`}
             onClick={() => handleTimeSelect(slot.time)}
             disabled={disabled || !slot.available}
